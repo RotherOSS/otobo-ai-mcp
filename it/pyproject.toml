@@ -1,0 +1,18 @@
+[project]
+name = "client"
+version = "1.0.2"
+description = "OTOBO MCP server integrationtest client"
+readme = "../README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "requests>=2.28.0",
+]
+
+[project.scripts]
+server = "client:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
