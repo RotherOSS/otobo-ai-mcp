@@ -1,4 +1,3 @@
-
 import asyncio
 import os
 import sys
@@ -24,11 +23,11 @@ async def run(SessionID):
         read_stream,
         write_stream,
         _,
-    ):    
+    ):
         print("connect\n");
-        
+
         async with ClientSession(read_stream, write_stream, logging_callback=handle_log) as session:
-        
+
             print("init\n");
             # Initialize the connection
             await session.initialize()
@@ -46,7 +45,7 @@ async def run(SessionID):
             print(f"Available tools: {[t for t in tools.tools]}")
 
             # Call a tool (add tool from fastmcp_quickstart)
-            result = await session.call_tool("get_ticket_details", arguments={"ticket_id": 1, "include_articles": True, "otobo_sid" : SessionID })        
+            result = await session.call_tool("get_ticket_details", arguments={"ticket_id": 1, "include_articles": True, "otobo_sid" : SessionID })
             result_unstructured = result.content[0]
             if isinstance(result_unstructured, types.TextContent):
                 print(f"Tool result: {result_unstructured.text}")
@@ -70,7 +69,7 @@ async def run(SessionID):
             print(f"Structured tool result: {result_structured}")
 
             # Call a tool (add tool from fastmcp_quickstart)
-            result = await session.call_tool("transfer_ticket_to_destination_queue", arguments={"ticket_id": 1, "destination_queue" : "Test", "otobo_sid" : SessionID } ) 
+            result = await session.call_tool("transfer_ticket_to_destination_queue", arguments={"ticket_id": 1, "destination_queue" : "Test", "otobo_sid" : SessionID } )
             result_unstructured = result.content[0]
             if isinstance(result_unstructured, types.TextContent):
                 print(f"Tool result: {result_unstructured.text}")
@@ -86,4 +85,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
+

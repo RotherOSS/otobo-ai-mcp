@@ -1,13 +1,12 @@
-version: '2'
 services:
   mcp:
     build:
       context: .
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile
     container_name: mcp
     ports:
         - 8765:8765
-    networks: 
+    networks:
         - otobo_default
     environment:
         - OTOBO_MCP_INTERNAL_URL=http://web:5000
@@ -21,11 +20,8 @@ services:
         - OTOBO_MCP_LOGLEVEL=40
         # see https://docs.python.org/3/library/logging.html#logging-levels
         # for loglevel description
-        
+
 networks:
   otobo_default:
     external: true
 
-
-        
-            

@@ -1,19 +1,20 @@
 # OTOBO AI MCP server
 
-assumes a running OTOBO instance with otobo-ai package installed.
+This is the OTOBO MCP server.
+It exposes parts of the OTOBO webservices to an LLM as part of the [otobo-ai-services](https://github.com/rotheross/otobo-ai-services).
+It assumes a running OTOBO instance with otobo-ai package installed.
 
-# build
+## Build
 
-to build the server
+To build the server
 
-```
+```sh
 docker compose build
-``` 
-
-to build the .venv (only needed if you want to run the integration test
-client client.py)
-
 ```
+
+To build the `.venv` (only needed if you want to run the integration test client `client.py`)
+
+```sh
 # install python uv (here:ubuntu), or use pip
 sudo snap install astral-uv --classic
 
@@ -23,29 +24,29 @@ uv sync
 
 ```
 
-# run MCP server
+## Run MCP Server
 
-```
+```sh
 docker compose up -d
 ```
 
-## integration test (client.py)
+## Integration Test
 
-### OTOBO SessionID
+The integration test is implemented in the `client.py`.
 
-The MCP uses a OTOBO SessionID bound to the MCP server ip address.
-Create one using:
+The MCP uses a OTOBO SessionID bound to the MCP server IP address.
+Obtain a session ID:
 
+```sh
+docker exec ti mcp curl -vk \
+  http://web:5000/otobo/nph-genericinterface.pl/Webservice/Session/Session \
+  --header "Content-Type: application/json" \
+  --data '{"UserLogin" : "root@localhost", "Password" : "root"}'
 ```
-# first open a shell inside the mcp docker containwe
-docker exec -ti mcp bash
-# inside the mcp, run curl
-curl -vk http://web:5000/otobo/nph-genericinterface.pl/Webservice/Session/Session -H"Content-Type: application/json" --data '{"UserLogin" : "root@localhost", "Password" : "root"}'
-```
 
+Run the client with this session id:
 
-### run the integration test client
-```
+```sh
 uv run client.py <SessionID>
-``` 
+```
 
