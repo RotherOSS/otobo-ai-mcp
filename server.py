@@ -76,14 +76,14 @@ class APIError(Exception):
 
 
 def post_operation(operation: str, payload: dict) -> dict:
-    
+
     url = settings.operation_url(operation)
 
     log.debug( f"POST url: {url}")
 
     try:
-        resp = requests.post( 
-            url, 
+        resp = requests.post(
+            url,
             headers = {"Content-Type": "application/json"},
             data    = json.dumps(payload),
             verify  = settings.ssl_verify,
@@ -134,15 +134,15 @@ def put_operation(operation: str, payload: dict) -> dict:
 
 
 def get_operation(operation: str, payload: dict) -> dict:
-    
+
     url = settings.operation_url(operation)
     log.debug( f"POST url: {url}")
-    
+
     try:
         resp = requests.get(
-            url, headers={ "Content-Type": "application/json" }, 
+            url, headers={ "Content-Type": "application/json" },
             params  = payload,
-            verify  = settings.ssl_verify, 
+            verify  = settings.ssl_verify,
             timeout = settings.timeout
         )
     except requests.RequestException as e:
@@ -158,16 +158,16 @@ def get_operation(operation: str, payload: dict) -> dict:
 
     log.debug(data)
     return data
-    
-    
-# helpers and filters    
+
+
+# helpers and filters
 
 def do_get_ticket(ticket_id: int, all_articles: bool = True, sid: str = "") -> dict:
 
     data = get_operation(
-        "Ticket/" + str(ticket_id), 
+        "Ticket/" + str(ticket_id),
         {
-            "AllArticles": "1" if all_articles else "0",        
+            "AllArticles": "1" if all_articles else "0",
             "DynamicFields": "1",
             "SessionID" : sid,
         }
@@ -244,7 +244,7 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
 
     dynamic = {k.replace("DynamicField_", ""): v
                for k, v in ticket.items() if k.startswith("DynamicField_") and v}
-               
+
     if dynamic:
         out["dynamic_fields"] = dynamic
 
@@ -261,7 +261,7 @@ def filter_article(article: dict) -> dict:
     for DF in DFS:
         if ( DF.get("Name","") == "OTOBOAI" ):
             OTOBOAI = DF.get("Value")
-            
+
     return {
         "article_id": article.get("ArticleID"),
         "from": article.get("From"),
@@ -283,11 +283,11 @@ def filter_article(article: dict) -> dict:
         "readOnlyHint"    : True,
         "idempotentHint"  : True,
         "destructiveHint" : False,
-        "openWorldHint"   : True,
+        "openWorldHint"   : False,
     }
 )
 def get_ticket_details(ticket_id: int, include_articles: bool = True, otobo_sid : str = '') -> str:
-    
+
     """
     Get full details of an OTOBO ticket by ID, including dynamic fields and optionally all articles.
 
@@ -317,8 +317,8 @@ def get_ticket_details(ticket_id: int, include_articles: bool = True, otobo_sid 
         "title"           : "Update generated ticket response in OTOBO",
         "readOnlyHint"    : False,
         "idempotentHint"  : True,
-        "destructiveHint" : False,
-        "openWorldHint"   : True,
+        "destructiveHint" : True,
+        "openWorldHint"   : False,
     }
 )
 def update_generated_response(ticket_id: int, generated_response: str, article_id: int = None, otobo_sid : str = '') -> bool:
@@ -353,8 +353,8 @@ def update_generated_response(ticket_id: int, generated_response: str, article_i
         "title"           : "Transfer ticket to destination queue in OTOBO",
         "readOnlyHint"    : False,
         "idempotentHint"  : True,
-        "destructiveHint" : False,
-        "openWorldHint"   : True,
+        "destructiveHint" : True,
+        "openWorldHint"   : False,
     }
 )
 def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str, otobo_sid : str = '') -> bool:
@@ -392,7 +392,7 @@ def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str,
         "openWorldHint"   : False,
     })
 def get_link_to_ticket(ticket_id: int) -> str:
-    """ 
+    """
     Get a valid HTTP link to browse to a specific ticket_id in OTOBO.
 
     Args:
