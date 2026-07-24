@@ -277,7 +277,15 @@ def filter_article(article: dict) -> dict:
 
 # the MCP tools available via this MCP
 
-@server.tool()
+@server.tool(
+    annotations = {
+        "title"           : "Get ticket details from OTOBO",
+        "readOnlyHint"    : True,
+        "idempotentHint"  : True,
+        "destructiveHint" : False,
+        "openWorldHint"   : True,
+    }
+)
 def get_ticket_details(ticket_id: int, include_articles: bool = True, otobo_sid : str = '') -> str:
     
     """
@@ -303,7 +311,16 @@ def get_ticket_details(ticket_id: int, include_articles: bool = True, otobo_sid 
 
     return json.dumps(filter_ticket(raw, include_articles))
 
-@server.tool()
+
+@server.tool(
+    annotations = {
+        "title"           : "Update generated ticket response in OTOBO",
+        "readOnlyHint"    : False,
+        "idempotentHint"  : True,
+        "destructiveHint" : False,
+        "openWorldHint"   : True,
+    }
+)
 def update_generated_response(ticket_id: int, generated_response: str, article_id: int = None, otobo_sid : str = '') -> bool:
 
     """
@@ -330,7 +347,16 @@ def update_generated_response(ticket_id: int, generated_response: str, article_i
 
     return raw['Success'] == 1
 
-@server.tool()
+
+@server.tool(
+    annotations = {
+        "title"           : "Transfer ticket to destination queue in OTOBO",
+        "readOnlyHint"    : False,
+        "idempotentHint"  : True,
+        "destructiveHint" : False,
+        "openWorldHint"   : True,
+    }
+)
 def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str, otobo_sid : str = '') -> bool:
 
     """
@@ -357,7 +383,14 @@ def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str,
     return raw['TicketID'] == str(ticket_id)
 
 
-@server.tool()
+@server.tool(
+    annotations = {
+        "title"           : "Get a direct link for a ticket in OTOBO",
+        "readOnlyHint"    : True,
+        "idempotentHint"  : True,
+        "destructiveHint" : False,
+        "openWorldHint"   : False,
+    })
 def get_link_to_ticket(ticket_id: int) -> str:
     """ 
     Get a valid HTTP link to browse to a specific ticket_id in OTOBO.
