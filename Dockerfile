@@ -7,6 +7,7 @@ RUN apt-get update \
     tree \
     vim \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
@@ -14,6 +15,7 @@ WORKDIR /
 # Copy requirements and install
 COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install git+https://github.com/toon-format/toon-python.git
 
 # Copy source code
 COPY ./server.py /server.py

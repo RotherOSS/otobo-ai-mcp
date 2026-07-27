@@ -21,6 +21,7 @@ import logging
 import requests
 import argparse
 
+from toon_format import encode, decode
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
@@ -265,19 +266,19 @@ def get_ticket_details(ticket_id: int, include_articles: bool = True, otobo_sid 
         otobo_sid: the OTOBO sessionID
     """
     if not settings.internal_url:
-        return json.dumps({"error": "OTOBO_HOST is not configured"})
+        return encode({"error": "OTOBO_HOST is not configured"})
 
     try:
         raw = do_get_ticket(ticket_id, all_articles=include_articles, sid=otobo_sid)
     except APIError as e:
         log.warning( str(e) )
-        return json.dumps({"error": str(e)})
+        return encode({"error": str(e)})
 
     if not raw:
         log.warning( f"Ticket {ticket_id} not found" )
-        return json.dumps({"error": f"Ticket {ticket_id} not found"})
+        return encode({"error": f"Ticket {ticket_id} not found"})
 
-    return json.dumps(filter_ticket(raw, include_articles))
+    return encode(filter_ticket(raw, include_articles))
 
 
 @server.tool(
@@ -367,7 +368,7 @@ def get_link_to_ticket(ticket_id: int) -> str:
         ticket_id: Numeric OTOBO ticket ID.
     """
 
-    return json.dumps(settings.ticket_url(ticket_id))
+    return encode(settings.ticket_url(ticket_id))
 
 
 
