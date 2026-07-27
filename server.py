@@ -60,6 +60,7 @@ settings  = Settings()
 log = logging.getLogger("otobo-mcp")
 logging.basicConfig(level=settings.loglevel, format="%(asctime)s %(levelname)s %(name)s: %(message)s", stream=sys.stderr)
 
+# server instance 
 
 server    = FastMCP(
     "otobo-mcp-server",
@@ -160,7 +161,7 @@ def get_operation(operation: str, payload: dict) -> dict:
     return data
 
 
-# helpers and filters
+# business logic functions that use above OTOBO REST endpoints
 
 def do_get_ticket(ticket_id: int, all_articles: bool = True, sid: str = "") -> dict:
 
@@ -172,7 +173,7 @@ def do_get_ticket(ticket_id: int, all_articles: bool = True, sid: str = "") -> d
             "SessionID" : sid,
         }
     )
-    tickets = data.get("Ticket", [])
+    tickets = data.get("ticket", [])
     if isinstance(tickets, dict):
         return tickets
     if isinstance(tickets, list) and tickets:
@@ -218,9 +219,11 @@ def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, 
     return data
 
 
+# helpers and filters
+
 def fetch_articles(ticket: dict) -> list[dict]:
 
-    articles = ticket.get("Article", [])
+    articles = ticket.get("article", [])
     if isinstance(articles, dict):
         return [articles]
     return articles
@@ -228,51 +231,16 @@ def fetch_articles(ticket: dict) -> list[dict]:
 
 def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
 
-    out = {
-        "ticket_id": ticket.get("TicketID"),
-        "ticket_number": ticket.get("TicketNumber"),
-        "title": ticket.get("Title"),
-        "state": ticket.get("State"),
-        "priority": ticket.get("Priority"),
-        "queue": ticket.get("Queue"),
-        "customer": ticket.get("CustomerUserID"),
-        "owner": ticket.get("Owner"),
-        "created": ticket.get("Created"),
-        "changed": ticket.get("Changed"),
-        "url": settings.ticket_url(ticket["TicketID"]) if ticket.get("TicketID") else None,
-    }
+    out = ticket
 
-    dynamic = {k.replace("DynamicField_", ""): v
-               for k, v in ticket.items() if k.startswith("DynamicField_") and v}
-
-    if dynamic:
-        out["dynamic_fields"] = dynamic
-
-    if include_articles:
-        out["articles"] = [filter_article(a) for a in fetch_articles(ticket)]
+    out["url"] : settings.ticket_url(ticket["ticket_id"]) if ticket.get("ticket_id") else None
 
     return out
 
 
 def filter_article(article: dict) -> dict:
 
-    OTOBOAI = None
-    DFS = article.get("DynamicField")
-    for DF in DFS:
-        if ( DF.get("Name","") == "OTOBOAI" ):
-            OTOBOAI = DF.get("Value")
-
-    return {
-        "article_id": article.get("ArticleID"),
-        "from": article.get("From"),
-        "to": article.get("To"),
-        "subject": article.get("Subject"),
-        "body": article.get("Body"),
-        "created": article.get("CreateTime", article.get("Created")),
-        "channel": article.get("CommunicationChannel", article.get("ArticleType")),
-        "sender_type": article.get("SenderType"),
-        "generated_answer" : OTOBOAI,
-    }
+    return article
 
 
 # the MCP tools available via this MCP
