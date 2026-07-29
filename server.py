@@ -40,6 +40,7 @@ class Settings:
         self.timeout      = int(os.environ.get("OTOBO_MCP_TIMEOUT", 30))
         self.transport    = os.environ.get("OTOBO_MCP_TRANSPORT", "streamable-http")
         self.loglevel     = int(os.environ.get("OTOBO_MCP_LOGLEVEL",40)) # see https://docs.python.org/3/library/logging.html#logging-levels
+        self.has_faq      = True if os.environ.get("OTOBO_MCP_HAS_FAQ","false").lower() == "true" else False
 
     def operation_url(self, operation: str) -> str:
         return f"{self.internal_url}/otobo/nph-genericinterface.pl/Webservice/{self.webservice}/{operation}"
@@ -400,6 +401,24 @@ def get_link_to_ticket(ticket_id: int) -> str:
     """
 
     return json.dumps(settings.ticket_url(ticket_id))
+
+
+if settings.has_faq:
+    @server.tool(
+        annotations = {
+            "title"           : "Get FAQ Version",
+            "readOnlyHint"    : True,
+            "idempotentHint"  : True,
+            "destructiveHint" : False,
+            "openWorldHint"   : False,
+        })
+    def get_faq_version() -> str:
+        """
+        Get the VErsion of the FAQ
+
+        """
+
+        return json.dumps("VERSION 0.0")
 
 
 

@@ -75,6 +75,16 @@ async def run(SessionID):
                 print(f"Tool result: {result_unstructured.text}")
             result_structured = result.structuredContent
             print(f"Structured tool result: {result_structured}")
+            
+            if True:
+                # Call a tool (add tool from fastmcp_quickstart)
+                result = await session.call_tool("get_faq_version", arguments={} )
+                result_unstructured = result.content[0]
+                if isinstance(result_unstructured, types.TextContent):
+                    print(f"Tool result: {result_unstructured.text}")
+                result_structured = result.structuredContent
+                print(f"Structured tool result: {result_structured}")
+            
 
 
 def main():
