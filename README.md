@@ -10,8 +10,7 @@ It assumes a running OTOBO instance with otobo-ai package installed.
 |------------------------------------|-----------------------------------------------------|
 |ticket_fulltext_search              | does a fulltext search in ES for tickets            |
 |faq_fulltext_search                 | does a fulltext search in ES for FAQs               |
-|get_ticket_details                  | retrieve ticket detail data including articles      |
-|                                    | and links                                           |
+|get_ticket_details                  | retrieve ticket detail data including articles and links |
 |transfer_ticket_to_destination_queue| move ticket to another queue                        |
 |update_generated_response           | update the AI generated response for                |
 |                                    | an article of a ticket in OTOBO                     |
