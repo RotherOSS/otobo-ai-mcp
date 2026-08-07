@@ -16,8 +16,8 @@ It assumes a running OTOBO instance with otobo-ai package installed.
 |find_similar_tickets                | find similar tickets in vector DB                   |
 |link_ticket_to_ticket               | link a ticket to another ticket in OTOBO            |
 |unlink_ticket_to_ticket             | remove a link from a ticket to another ticket       |
-|get_link_to_ticket                  | retrive URL that links to a ticket in OTOBO         |
-|get_link_to_faq                     | retrive URL that links to a FAQ item in OTOBO       |
+|get_link_to_ticket                  | retrieve URL that links to a ticket in OTOBO        |
+|get_link_to_faq                     | retrieve URL that links to a FAQ item in OTOBO      |
 
 all tools - except for the last two link generation tools - need a valid
 OTOBO SessionID (sid). When the chat is invoked from OTOBO, this sid will be
