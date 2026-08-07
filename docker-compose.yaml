@@ -17,7 +17,7 @@ services:
         - OTOBO_MCP_TRANSPORT=streamable-http
         - OTOBO_MCP_BIND=0.0.0.0
         - OTOBO_MCP_PORT=8765
-        - OTOBO_MCP_LOGLEVEL=40
+        - OTOBO_MCP_LOGLEVEL=10
         # see https://docs.python.org/3/library/logging.html#logging-levels
         # for loglevel description
 
