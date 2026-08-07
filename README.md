@@ -12,8 +12,7 @@ It assumes a running OTOBO instance with otobo-ai package installed.
 |faq_fulltext_search                 | does a fulltext search in ES for FAQs               |
 |get_ticket_details                  | retrieve ticket detail data including articles and links |
 |transfer_ticket_to_destination_queue| move ticket to another queue                        |
-|update_generated_response           | update the AI generated response for                |
-|                                    | an article of a ticket in OTOBO                     |
+|update_generated_response           | update the AI generated response for an article of a ticket in OTOBO |
 |find_similar_tickets                | find similar tickets in vector DB                   |
 |link_ticket_to_ticket               | link a ticket to another ticket in OTOBO            |
 |unlink_ticket_to_ticket             | remove a link from a ticket to another ticket       |
