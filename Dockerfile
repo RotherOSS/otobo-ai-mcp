@@ -16,8 +16,13 @@ COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY ./server.py /server.py
+RUN mkdir /mcp
+COPY ./server.py /mcp/server.py
+COPY ./otobo.py /mcp/otobo.py
+COPY ./rest.py /mcp/rest.py
+COPY ./domain /mcp/domain
+COPY ./tools /mcp/tools
 
 # RUN
-ENTRYPOINT [ "python", "/server.py" ]
+ENTRYPOINT [ "python", "/mcp/server.py" ]
 
