@@ -14,7 +14,7 @@ import otobo
 
 class APIError(Exception):
     pass
-    
+
 
 # decorator
 def HandleAPIError(fun):
@@ -35,19 +35,25 @@ def HandleAPIError(fun):
 
 
     return inner
-    
 
 
-def post_operation(operation: str, payload: dict) -> dict:
+
+def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
 
     otobo.log.debug( f"POST url: {url}")
 
+    headers = {"Content-Type": "application/json"}
+    if bearer is not None:
+        headers["Authorization"] = "bearer " + bearer
+    elif sid is not None:
+        payload["SessionID"] = sid
+
     try:
         resp = requests.post(
             url,
-            headers = {"Content-Type": "application/json"},
+            headers = headers,
             data    = json.dumps(payload),
             verify  = otobo.settings.ssl_verify,
             timeout = otobo.settings.timeout
@@ -66,16 +72,22 @@ def post_operation(operation: str, payload: dict) -> dict:
     return data
 
 
-def put_operation(operation: str, payload: dict) -> dict:
+def put_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
 
     otobo.log.debug( f"PUT url: {url}")
 
+    headers = {"Content-Type": "application/json"}
+    if bearer is not None:
+        headers["Authorization"] = "bearer " + bearer
+    elif sid is not None:
+        payload["SessionID"] = sid
+
     try:
         resp = requests.put(
             url,
-            headers = {"Content-Type": "application/json"},
+            headers = headers,
             data    = json.dumps(payload),
             verify  = otobo.settings.ssl_verify,
             timeout = otobo.settings.timeout
@@ -94,14 +106,21 @@ def put_operation(operation: str, payload: dict) -> dict:
     return data
 
 
-def get_operation(operation: str, payload: dict) -> dict:
+def get_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
     otobo.log.debug( f"GET url: {url}, {payload}")
 
+    headers = {"Content-Type": "application/json"}
+    if bearer is not None:
+        headers["Authorization"] = "bearer " + bearer
+    elif sid is not None:
+        payload["SessionID"] = sid
+
     try:
         resp = requests.get(
-            url, headers={ "Content-Type": "application/json" },
+            url,
+            headers = headers,
             params  = payload,
             verify  = otobo.settings.ssl_verify,
             timeout = otobo.settings.timeout
@@ -120,14 +139,21 @@ def get_operation(operation: str, payload: dict) -> dict:
     return data
 
 
-def delete_operation(operation: str, payload: dict) -> dict:
+def delete_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
     otobo.log.debug( f"DELETE url: {url}, {payload}")
 
+    headers = {"Content-Type": "application/json"}
+    if bearer is not None:
+        headers["Authorization"] = "bearer " + bearer
+    elif sid is not None:
+        payload["SessionID"] = sid
+
     try:
         resp = requests.delete(
-            url, headers={ "Content-Type": "application/json" },
+            url,
+            headers = headers,
             params  = payload,
             verify  = otobo.settings.ssl_verify,
             timeout = otobo.settings.timeout

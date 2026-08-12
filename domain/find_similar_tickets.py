@@ -10,11 +10,9 @@ import otobo
 import rest
 
 
-def do_find_similar_tickets( ticket_id: str, article_id: str | None, sid : str ):
+def do_find_similar_tickets( ticket_id: str, article_id: str | None, bearer:str = None, sid:str = None ):
 
-    payload = {
-        'SessionID'    : sid
-    }
+    payload = {}
 
     if article_id is not None:
         payload["ArticleID"] = article_id
@@ -23,7 +21,9 @@ def do_find_similar_tickets( ticket_id: str, article_id: str | None, sid : str )
 
     raw = rest.get_operation(
         "Ticket/" + str(ticket_id) + "/Embeddings/ticket_pairs",
-        payload
+        payload,
+        sid    = sid,
+        bearer = bearer,
     )
 
     if isinstance(raw, dict):
@@ -37,7 +37,9 @@ def do_find_similar_tickets( ticket_id: str, article_id: str | None, sid : str )
 
     raw = rest.get_operation(
         "Ticket/" + str(ticket_id) + "/Embeddings/ticket_chunks",
-        payload
+        payload,
+        sid    = sid,
+        bearer = bearer,
     )
 
     if isinstance(raw, dict):

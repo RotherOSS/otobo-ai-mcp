@@ -10,17 +10,18 @@ import otobo
 import rest
 
 
-def do_ticket_fulltext_search( search_term: str, max_number_of_results: int, sid : str ) -> str:
+def do_ticket_fulltext_search( search_term: str, max_number_of_results: int, sid : str = None, bearer:str = None ) -> str:
 
     payload = {
-        'SessionID'    : sid,
         'Fulltext'     : search_term,
         "Limit"        : max_number_of_results
     }
 
     data = rest.get_operation(
         "Ticket",
-        payload
+        payload,
+        sid    = sid,
+        bearer = bearer,
     )
 
     data = data.get("ticket")

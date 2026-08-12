@@ -13,6 +13,10 @@ Environment:
     OTOBO_MCP_TRANSPORT            Transport: stdio, sse, streamable-http (default: stdio)
     OTOBO_MCP_LOGLEVEL             log level, default: info
     OTOBO_MCP_ENABLED_TOOLS        comma separated list of tools to enable
+    OTOBO_MCP_ISSUER_URL           OIDC compatible OAuth2 authorizationserver issuer url, eg =https://keycloak:8443/realms/master
+    OTOBO_MCP_RESOURCE_SERVER_URL  url to self, eg http://mcp:8765/mcp
+    OTOBO_MCP_SCOPES               space separated list of oauth2 scopes, eg 'email' (default)
+
 """
 
 import importlib
@@ -22,9 +26,14 @@ import otobo
 import rest
 
 # dynamically import the tools enabled in ENV
+# this will load either the oauth2 tools,
+# or the plain OTOBO_SESSIONID based tools
+
+tools_prefix = "oauth_tools." if otobo.settings.use_oauth2 else "tools."
+
 for tool in otobo.settings.enabled_tools:
 
-    importlib.import_module("tools." + tool)
+    importlib.import_module( tools_prefix + tool)
 
 
 if __name__ == "__main__":

@@ -10,17 +10,18 @@ import otobo
 import rest
 
 
-def do_faq_fulltext_search( search_term: str, max_number_of_results: int, sid : str ) -> str:
+def do_faq_fulltext_search( search_term: str, max_number_of_results: int, bearer:str = None, sid:str = None) -> str:
 
     payload = {
-        'SessionID'    : sid,
         'Fulltext'     : search_term,
         "Limit"        : max_number_of_results
     }
 
     data = rest.get_operation(
         "FAQ",
-        payload
+        payload,
+        bearer = bearer,
+        sid    = sid,
     )
 
     data = data.get("faq")

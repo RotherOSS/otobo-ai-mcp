@@ -22,6 +22,7 @@ COPY ./otobo.py /mcp/otobo.py
 COPY ./rest.py /mcp/rest.py
 COPY ./domain /mcp/domain
 COPY ./tools /mcp/tools
+COPY ./oauth_tools /mcp/oauth_tools
 
 # RUN
 ENTRYPOINT [ "python", "/mcp/server.py" ]

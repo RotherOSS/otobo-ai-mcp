@@ -4,17 +4,14 @@ import logging
 import requests
 
 from typing import Any
-#from mcp.server.fastmcp import FastMCP
-#from mcp.server.transport_security import TransportSecuritySettings
 
 import otobo
 import rest
 
 
-def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, article_id: int, sid:str) -> dict:
+def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, article_id: int, sid:str = None, bearer:str = None) -> dict:
 
     payload = {
-        'SessionID'    : sid,
         'DynamicField' : {
             'Name'  : 'OTOBOAI',
             'Value' : generated_response
@@ -26,7 +23,9 @@ def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, 
 
     data = rest.put_operation(
         "Ticket/" + str(ticket_id) + "/Article/DF",
-        payload
+        payload,
+        sid    = sid,
+        bearer = bearer,
     )
 
     return data

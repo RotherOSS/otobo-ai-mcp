@@ -10,10 +10,9 @@ import otobo
 import rest
 
 
-def do_transfer_ticket(ticket_id: int, destination_queue: str, sid: str = "") -> bool:
+def do_transfer_ticket(ticket_id: int, destination_queue: str, sid: str = None, bearer:str = None) -> bool:
 
     payload = {
-        'SessionID' : sid,
         'Ticket' : {
             "Queue" : destination_queue
         }
@@ -21,7 +20,9 @@ def do_transfer_ticket(ticket_id: int, destination_queue: str, sid: str = "") ->
 
     data = rest.put_operation(
         "Ticket/" + str(ticket_id),
-        payload
+        payload,
+        sid    = sid,
+        bearer = bearer,
     )
 
     return data
