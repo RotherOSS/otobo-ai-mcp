@@ -23,7 +23,7 @@ services:
         # tools enabled for this server
 #        - OTOBO_MCP_ENABLED_TOOLS=faq_fulltext_search,get_link_to_faq,get_ticket_details,ticket_fulltext_search,unlink_ticket_to_ticket,find_similar_tickets,get_link_to_ticket,link_ticket_to_ticket,transfer_ticket_to_destination_queue,update_generated_response
         # oauth specific
-        - OTOBO_MCP_OAUTH=true
+        - OTOBO_MCP_OAUTH=false
         - OTOBO_MCP_ISSUER_URL=https://keycloak:8443/realms/master
         - OTOBO_MCP_RESOURCE_SERVER_URL=http://mcp:8765/mcp
         - OTOBO_MCP_SCOPES=email
