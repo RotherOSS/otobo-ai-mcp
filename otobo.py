@@ -139,7 +139,7 @@ def fetch_articles(ticket: dict) -> list[dict]:
 
     articles = ticket.get("article", [])
     if isinstance(articles, dict):
-        return [articles]
+        articles = [articles]
 
     for article in articles:
         if article.get("article_id") is not None:
@@ -161,7 +161,7 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
         if isinstance(linked, dict):
             linked = [ linked ];
         for link in linked:
-            if link["ticket"] is not None:
+            if link.get("ticket") is not None:
                 id = link["ticket"]["ticket_id"]
                 link["ticket"]["url"] = settings.ticket_url(id)
 
