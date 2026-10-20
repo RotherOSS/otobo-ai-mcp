@@ -24,7 +24,7 @@ def update_generated_response(ticket_id: int, generated_response: str, article_i
 
     Args:
         ticket_id: numeric OTOBO ticket ID
-        generated_response: the AI generated answer suggestion
+        generated_response: the AI generated answer suggestion, without salutation and closing phrase
         article_id: optional numeric article ID
         otobo_sid: OTOBO session ID used for authentication
     """
