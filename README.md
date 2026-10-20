@@ -27,8 +27,29 @@ When the chat is invoked from OTOBO,
 this sid will be passed.
 
 > [!NOTE]
-> This sid will be bound to the AI chat
-> and is not usable in another context.
+> This sid will be bound to the AI chat and is not usable in another context.
+
+## Fenced Output
+
+Every tool result and tool error message is wrapped in a fence to keep prompt injection from OTOBO data at bay:
+
+```
+<<<OTOBO_DATA_BEGIN 3f9c…>>>
+{"ticket_id": 1, …}
+<<<OTOBO_DATA_END 3f9c…>>>
+```
+
+The nonce is generated anew for each tool call, so a ticket cannot guess the closing fence.
+The server instructions explain the fence to the LLM and tell it to treat the fenced content as data, never as instructions.
+
+Configure the fence with `OTOBO_MCP_FENCE_PREFIX` and `OTOBO_MCP_FENCE_SUFFIX`.
+
+> [!NOTE]
+> Tools registered with `@otobo.tool(...)` are fenced.
+> Do not register tools with `@otobo.server.tool(...)`, as their output stays unfenced.
+
+> [!IMPORTANT]
+> Both must contain the placeholder `{nonce}` and must differ from each other, otherwise the server refuses to start.
 
 ## Build
 

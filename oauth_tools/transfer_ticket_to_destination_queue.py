@@ -6,7 +6,7 @@ import domain.transfer_ticket_to_destination_queue
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Transfer ticket to destination queue in OTOBO",
         "readOnlyHint"    : False,

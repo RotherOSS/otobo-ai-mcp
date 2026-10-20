@@ -3,7 +3,7 @@ import json
 import otobo
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Get a direct link for a ticket in OTOBO",
         "readOnlyHint"    : True,

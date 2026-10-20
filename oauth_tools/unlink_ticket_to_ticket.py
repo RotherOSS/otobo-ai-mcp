@@ -8,7 +8,7 @@ import domain.unlink_ticket_to_ticket
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Remove a link to another OTOBO Ticket",
         "readOnlyHint"    : False,

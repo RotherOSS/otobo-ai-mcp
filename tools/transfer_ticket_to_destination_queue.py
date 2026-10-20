@@ -5,7 +5,7 @@ import otobo
 import domain.transfer_ticket_to_destination_queue
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Transfer ticket to destination queue in OTOBO",
         "readOnlyHint"    : False,

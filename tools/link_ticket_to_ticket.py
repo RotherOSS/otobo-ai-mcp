@@ -7,7 +7,7 @@ import otobo
 import domain.link_ticket_to_ticket
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Add a link to another OTOBO Ticket",
         "readOnlyHint"    : False,

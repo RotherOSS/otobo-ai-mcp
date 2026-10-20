@@ -8,7 +8,7 @@ import domain.get_ticket_details
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Get ticket details from OTOBO",
         "readOnlyHint"    : True,

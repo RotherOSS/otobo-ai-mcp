@@ -5,7 +5,7 @@ import otobo
 import domain.ticket_fulltext_search
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Ticket fulltext search",
         "readOnlyHint"    : True,

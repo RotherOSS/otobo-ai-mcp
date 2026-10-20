@@ -5,7 +5,7 @@ import otobo
 import domain.find_similar_tickets
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Find similar tickets",
         "readOnlyHint"    : True,

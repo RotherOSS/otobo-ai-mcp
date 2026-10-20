@@ -6,7 +6,7 @@ import otobo
 import domain.faq_fulltext_search
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "FAQ fulltext search",
         "readOnlyHint"    : True,

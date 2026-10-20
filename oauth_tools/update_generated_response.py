@@ -5,7 +5,7 @@ import otobo
 import domain.update_generated_response
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Update generated ticket response in OTOBO",
         "readOnlyHint"    : False,
