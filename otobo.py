@@ -3,10 +3,13 @@ import os
 import sys
 import jwt
 import logging
+import hashlib
+import inspect
 import secrets
 import functools
 
-from pydantic import AnyHttpUrl
+from typing import Annotated
+from pydantic import AnyHttpUrl, Field
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
@@ -51,6 +54,9 @@ class Settings:
         self.enabled_tools = os.environ.get("OTOBO_MCP_ENABLED_TOOLS",default_tools_enabled).split(",") 
         self.fence_prefix  = os.environ.get("OTOBO_MCP_FENCE_PREFIX", "<<<OTOBO_DATA_BEGIN {nonce}>>>")
         self.fence_suffix  = os.environ.get("OTOBO_MCP_FENCE_SUFFIX", "<<<OTOBO_DATA_END {nonce}>>>")
+        self.max_tokens    = int(os.environ.get("OTOBO_MCP_MAX_TOKENS", 8000))
+        self.chars_per_token = int(os.environ.get("OTOBO_MCP_CHARS_PER_TOKEN", 3))
+        self.stateless     = os.environ.get("OTOBO_MCP_STATELESS", "false").lower() in ("true", "1", "yes")
         # oauth2 only
         self.use_oauth2          = os.environ.get("OTOBO_MCP_OAUTH","false").lower() in ("true", "1", "yes")
         self.issuer_url          = AnyHttpUrl( os.environ.get("OTOBO_MCP_ISSUER_URL", "https://keycloak:8443/realms/master") )
@@ -138,6 +144,7 @@ if settings.use_oauth2:
     server = FastMCP(
         "otobo-mcp-server",
         instructions       = instructions,
+        stateless_http     = settings.stateless,
         transport_security = TransportSecuritySettings(
             enable_dns_rebinding_protection = False,
         ),
@@ -158,6 +165,7 @@ else:
     server = FastMCP(
         "otobo-mcp-server",
         instructions       = instructions,
+        stateless_http     = settings.stateless,
         transport_security = TransportSecuritySettings(
             enable_dns_rebinding_protection = False,
         )
@@ -165,19 +173,75 @@ else:
 
 
 
+# Output of read-only tools longer than max_tokens is split into chunks.
+# Pagination is stateless, so it works without MCP sessions and across workers:
+# to get a further chunk, the same tool is called again with the chunk number,
+# which re-fetches the data from OTOBO, checking the credentials again.
+# The result_hash detects data changed in between, which would shift the chunk boundaries.
+# The token count is estimated from the length, as the tokenizer of the LLM is unknown.
+
+MaxTokens  = Annotated[int, Field(ge=500, description="approximate maximum number of tokens returned, longer results are split into chunks")]
+Chunk      = Annotated[int, Field(ge=1, description="number of the chunk to return, starting at 1")]
+ResultHash = Annotated[str | None, Field(description="result_hash given with the previous chunk")]
+
+
+def paginate(output: str, max_tokens: int, chunk: int, result_hash: str | None) -> str:
+
+    chunk_size = max_tokens * settings.chars_per_token
+    if chunk == 1 and len(output) <= chunk_size:
+        return fence(output)
+
+    chunks = [ output[start:start + chunk_size] for start in range(0, len(output), chunk_size) ]
+    output_hash = hashlib.sha256(output.encode()).hexdigest()[:8]
+
+    if result_hash is not None and result_hash != output_hash:
+        raise ToolError(fence("The result changed since the previous chunk, repeat the call with chunk=1"))
+
+    if chunk > len(chunks):
+        raise ToolError(fence(f"chunk must be between 1 and {len(chunks)}"))
+
+    response = fence(chunks[chunk - 1]) + f"\nChunk {chunk} of {len(chunks)}."
+    if chunk < len(chunks):
+        response += f' Repeat the call with chunk={chunk + 1} and result_hash="{output_hash}".'
+
+    return response
+
+
+def keyword_parameter(name: str, annotation, default) -> inspect.Parameter:
+    return inspect.Parameter(name, inspect.Parameter.KEYWORD_ONLY, default=default, annotation=annotation)
+
+
 # Register a tool on the server, fencing its output and error messages.
+# Read-only tools get the parameters max_tokens, chunk and result_hash for pagination.
+# Write tools do not, as repeating their call would repeat the change.
 # Use it in place of server.tool, which leaves the output unfenced.
 
 def tool(**tool_kwargs):
 
     def register(fn):
 
+        read_only = tool_kwargs.get("annotations", {}).get("readOnlyHint", False)
+
         @functools.wraps(fn)
-        def fenced(*fn_args, **fn_kwargs):
+        def fenced(*fn_args, max_tokens: int = settings.max_tokens, chunk: int = 1, result_hash: str | None = None, **fn_kwargs):
             try:
-                return fence(fn(*fn_args, **fn_kwargs))
+                output = fn(*fn_args, **fn_kwargs)
             except Exception as e:
                 raise ToolError(fence(str(e))) from e
+
+            if not read_only:
+                return fence(output)
+
+            return paginate(output, max_tokens, chunk, result_hash)
+
+        if read_only:
+            signature = inspect.signature(fn)
+            fenced.__signature__ = signature.replace(parameters=[
+                *signature.parameters.values(),
+                keyword_parameter("max_tokens", MaxTokens, settings.max_tokens),
+                keyword_parameter("chunk", Chunk, 1),
+                keyword_parameter("result_hash", ResultHash, None),
+            ])
 
         return server.tool(**tool_kwargs)(fenced)
 

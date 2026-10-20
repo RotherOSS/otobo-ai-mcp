@@ -27,4 +27,4 @@ def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str,
 
     raw = domain.transfer_ticket_to_destination_queue.do_transfer_ticket( ticket_id, destination_queue, sid=otobo_sid)
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)

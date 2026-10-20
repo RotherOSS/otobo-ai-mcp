@@ -29,4 +29,4 @@ def ticket_fulltext_search( search_term: str, otobo_sid : str = '', max_number_o
 
     raw = domain.ticket_fulltext_search.do_ticket_fulltext_search( search_term, max_number_of_results, sid=otobo_sid)
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)

@@ -29,5 +29,5 @@ def find_similar_tickets( ticket_id: str, otobo_sid : str = '', article_id : str
 
     raw = domain.find_similar_tickets.do_find_similar_tickets( ticket_id=ticket_id, article_id=article_id, sid=otobo_sid)
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 

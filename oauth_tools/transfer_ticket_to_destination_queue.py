@@ -31,5 +31,5 @@ def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str 
         bearer = get_access_token().token
     )
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 

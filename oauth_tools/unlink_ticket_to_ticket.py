@@ -38,5 +38,5 @@ def unlink_ticket_from_ticket( ticket_id: str, linked_ticket_id: str, dir: Liter
         bearer           = get_access_token().token
     )
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 

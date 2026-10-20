@@ -38,6 +38,6 @@ def link_ticket_to_ticket( ticket_id: str, linked_ticket_id: str, dir: Literal["
         bearer           = get_access_token().token
     )
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 
 

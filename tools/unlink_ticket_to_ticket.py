@@ -30,4 +30,4 @@ def unlink_ticket_from_ticket( ticket_id: str, linked_ticket_id: str, otobo_sid 
 
     raw = domain.unlink_ticket_to_ticket.do_unlink_ticket( type='Ticket', ticket_id=ticket_id, linked_ticket_id=linked_ticket_id, linked_faq_id=None, sid=otobo_sid, dir=dir)
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)

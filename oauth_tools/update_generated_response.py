@@ -29,5 +29,5 @@ def update_generated_response(ticket_id: int, generated_response: str, article_i
     """
     raw = domain.update_generated_response.do_update_article_df( 'OTOBOAI', ticket_id, generated_response, article_id=article_id, sid=otobo_sid)
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 

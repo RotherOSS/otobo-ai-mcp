@@ -25,6 +25,11 @@ services:
         # fence around each tool result, must contain {nonce}, prefix and suffix must differ
         - OTOBO_MCP_FENCE_PREFIX=<<<OTOBO_DATA_BEGIN {nonce}>>>
         - OTOBO_MCP_FENCE_SUFFIX=<<<OTOBO_DATA_END {nonce}>>>
+        # default token limit of a read-only tool result, longer results are chunked
+        - OTOBO_MCP_MAX_TOKENS=8000
+        - OTOBO_MCP_CHARS_PER_TOKEN=3
+        # run without MCP sessions, eg for several workers
+        - OTOBO_MCP_STATELESS=false
         # oauth specific
         - OTOBO_MCP_OAUTH=false
         - OTOBO_MCP_ISSUER_URL=https://keycloak:8443/realms/master

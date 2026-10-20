@@ -37,6 +37,6 @@ def get_ticket_details(ticket_id: int, include_articles: bool = True) -> str:
     if not raw:
         raise ToolError(f"Ticket {ticket_id} not found")
 
-    return json.dumps(otobo.filter_ticket(raw, include_articles))
+    return json.dumps(otobo.filter_ticket(raw, include_articles), sort_keys=True)
 
 

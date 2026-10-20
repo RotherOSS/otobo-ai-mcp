@@ -33,6 +33,6 @@ def find_similar_tickets( ticket_id: str, article_id : str | None = None ) -> st
         bearer     = get_access_token().token
     )
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 
 

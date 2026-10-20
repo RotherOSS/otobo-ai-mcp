@@ -33,5 +33,5 @@ def ticket_fulltext_search( search_term: str, max_number_of_results: int = 10  )
         bearer = get_access_token().token
     )
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 

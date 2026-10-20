@@ -15,6 +15,9 @@ Environment:
     OTOBO_MCP_ENABLED_TOOLS        comma separated list of tools to enable (default: all)
     OTOBO_MCP_FENCE_PREFIX         line before each tool result, must contain {nonce} (default: <<<OTOBO_DATA_BEGIN {nonce}>>>)
     OTOBO_MCP_FENCE_SUFFIX         line after each tool result, must contain {nonce} (default: <<<OTOBO_DATA_END {nonce}>>>)
+    OTOBO_MCP_MAX_TOKENS           default token limit of a read-only tool result, longer results are chunked (default: 8000)
+    OTOBO_MCP_CHARS_PER_TOKEN      characters per token to estimate the token count (default: 3)
+    OTOBO_MCP_STATELESS            run streamable-http without MCP sessions, eg for several workers (default: false)
     OTOBO_MCP_OAUTH                use OAuth2 bearer tokens instead of OTOBO session IDs (default: false)
     OTOBO_MCP_ISSUER_URL           OIDC compatible OAuth2 authorization server issuer url, eg https://keycloak:8443/realms/master
     OTOBO_MCP_RESOURCE_SERVER_URL  url to self, eg http://mcp:8765/mcp

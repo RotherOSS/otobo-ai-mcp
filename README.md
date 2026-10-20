@@ -51,6 +51,26 @@ Configure the fence with `OTOBO_MCP_FENCE_PREFIX` and `OTOBO_MCP_FENCE_SUFFIX`.
 > [!IMPORTANT]
 > Both must contain the placeholder `{nonce}` and must differ from each other, otherwise the server refuses to start.
 
+## Chunked Output
+
+Tickets may be arbitrarily long, while the context of the LLM is limited.
+Every read-only tool accepts the parameter `max_tokens`, defaulting to `OTOBO_MCP_MAX_TOKENS`.
+A longer result is split into chunks.
+The first chunk is returned, followed by a hint how to retrieve the next one:
+
+```
+Chunk 1 of 4. Repeat the call with chunk=2 and result_hash="1a2b3c4d".
+```
+
+Pagination is stateless, each chunk is a new call fetching the data from OTOBO again.
+If the data changed in between, the `result_hash` no longer matches and the LLM is asked to start again with chunk 1.
+
+> [!NOTE]
+> The token count is estimated from the length of the result using `OTOBO_MCP_CHARS_PER_TOKEN`, as the tokenizer of the LLM is unknown to the server.
+
+> [!NOTE]
+> Write tools are not chunked, as repeating their call would repeat the change.
+
 ## Build
 
 To build the server

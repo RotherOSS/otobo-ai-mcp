@@ -30,5 +30,5 @@ def faq_fulltext_search( search_term: str, otobo_sid : str = '', max_number_of_r
 
     raw = domain.faq_fulltext_search.do_faq_fulltext_search( search_term, max_number_of_results, sid=otobo_sid)
 
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 
