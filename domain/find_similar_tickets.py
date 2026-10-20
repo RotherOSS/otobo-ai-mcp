@@ -1,60 +1,35 @@
 
-import os
-import sys
-import json
-import logging
-
-from typing import Any
-
-import otobo
 import rest
 
 
-def do_find_similar_tickets( ticket_id: str, article_id: str | None, bearer:str = None, sid:str = None ):
+def collect_source_ids(raw, source_ids: dict) -> None:
+
+    if isinstance(raw, dict):
+        raw = [ raw ]
+
+    for item in raw:
+        metadata = item.get("metadata") or {}
+        if metadata.get("source_id") is not None:
+            source_ids[metadata["source_id"]] = 1
+
+
+def do_find_similar_tickets( ticket_id: str, article_id: str | None, bearer:str = None, sid:str = None ) -> dict:
 
     payload = {}
 
     if article_id is not None:
         payload["ArticleID"] = article_id
 
-    data = {}
+    source_ids = {}
 
-    raw = rest.get_operation(
-        "Ticket/" + str(ticket_id) + "/Embeddings/ticket_pairs",
-        payload,
-        sid    = sid,
-        bearer = bearer,
-    )
+    for collection in ("ticket_pairs", "ticket_chunks"):
+        raw = rest.get_operation(
+            "Ticket/" + str(ticket_id) + "/Embeddings/" + collection,
+            payload,
+            sid    = sid,
+            bearer = bearer,
+        )
+        collect_source_ids(raw, source_ids)
 
-    if isinstance(raw, dict):
-        raw = [ raw ]
-
-    for item in raw:
-        if item["metadata"] is not None:
-            metadata = item["metadata"]
-            if metadata["source_id"] is not None:
-                data[metadata["source_id"]] = 1
-
-    raw = rest.get_operation(
-        "Ticket/" + str(ticket_id) + "/Embeddings/ticket_chunks",
-        payload,
-        sid    = sid,
-        bearer = bearer,
-    )
-
-    if isinstance(raw, dict):
-        raw = [ raw ]
-
-    for item in raw:
-        if item["metadata"] is not None:
-            metadata = item["metadata"]
-            if metadata["source_id"] is not None:
-                data[metadata["source_id"]] = 1
-
-    result = []
-    for k,v in data.items():
-        result.append(k)
-
-    return { "similar_tickets" : result }
-
+    return { "similar_tickets" : list(source_ids) }
 

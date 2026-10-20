@@ -1,11 +1,4 @@
 
-import json
-import logging
-import requests
-
-from typing import Any
-
-import otobo
 import rest
 
 
@@ -13,7 +6,7 @@ def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, 
 
     payload = {
         'DynamicField' : {
-            'Name'  : 'OTOBOAI',
+            'Name'  : dfname,
             'Value' : generated_response
         }
     }
@@ -29,4 +22,3 @@ def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, 
     )
 
     return data
-

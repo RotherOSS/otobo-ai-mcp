@@ -1,16 +1,8 @@
 
-import os
-import sys
-import json
-import logging
-
-from typing import Any
-
-import otobo
 import rest
 
 
-def do_transfer_ticket(ticket_id: int, destination_queue: str, sid: str = None, bearer:str = None) -> bool:
+def do_transfer_ticket(ticket_id: int, destination_queue: str, sid: str = None, bearer:str = None) -> dict:
 
     payload = {
         'Ticket' : {
@@ -26,5 +18,4 @@ def do_transfer_ticket(ticket_id: int, destination_queue: str, sid: str = None, 
     )
 
     return data
-
 

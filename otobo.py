@@ -2,18 +2,14 @@
 import os
 import sys
 import jwt
-import json
 import logging
-import requests
-import argparse
 
 from pydantic import AnyHttpUrl
 
-from typing import Any
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
-from mcp.server.auth.provider import AccessToken, TokenVerifier#, AccessTokenT
+from mcp.server.auth.provider import AccessToken, TokenVerifier
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
 
 
@@ -31,6 +27,11 @@ default_tools_enabled = ",".join([
 ])
 
 
+# accepts a numeric level or a level name, see https://docs.python.org/3/library/logging.html#logging-levels
+def parse_loglevel(value: str) -> int | str:
+    return int(value) if value.isdigit() else value.upper()
+
+
 # Configuration
 class Settings:
 
@@ -43,7 +44,7 @@ class Settings:
         self.ssl_verify    = os.environ.get("OTOBO_MCP_SSL_VERIFY", "false").lower() in ("true", "1", "yes")
         self.timeout       = int(os.environ.get("OTOBO_MCP_TIMEOUT", 30))
         self.transport     = os.environ.get("OTOBO_MCP_TRANSPORT", "streamable-http")
-        self.loglevel      = int(os.environ.get("OTOBO_MCP_LOGLEVEL",40)) # see https://docs.python.org/3/library/logging.html#logging-levels
+        self.loglevel      = parse_loglevel(os.environ.get("OTOBO_MCP_LOGLEVEL", "40"))
         self.enabled_tools = os.environ.get("OTOBO_MCP_ENABLED_TOOLS",default_tools_enabled).split(",") 
         # oauth2 only
         self.use_oauth2          = os.environ.get("OTOBO_MCP_OAUTH","false").lower() in ("true", "1", "yes")
@@ -159,7 +160,7 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
     if ticket.get("linked") is not None:
         linked = ticket["linked"]
         if isinstance(linked, dict):
-            linked = [ linked ];
+            linked = [ linked ]
         for link in linked:
             if link.get("ticket") is not None:
                 id = link["ticket"]["ticket_id"]

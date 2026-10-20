@@ -1,12 +1,4 @@
 
-import os
-import sys
-import json
-import logging
-
-from typing import Any
-
-import otobo
 import rest
 
 
@@ -35,5 +27,4 @@ def do_get_ticket(ticket_id: int, all_articles: bool = True, bearer:str = None, 
         return tickets[0]
 
     return {}
-
 

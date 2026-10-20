@@ -1,16 +1,13 @@
 import json
-import logging
 
-from typing import Any
+from mcp.server.fastmcp.exceptions import ToolError
 
 import otobo
-import rest
 
-import domain.get_ticket_details     
+import domain.get_ticket_details
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
-@rest.HandleAPIError
 @otobo.server.tool(
     annotations = {
         "title"           : "Get ticket details from OTOBO",
@@ -23,11 +20,13 @@ from mcp.server.auth.middleware.auth_context import get_access_token
 def get_ticket_details(ticket_id: int, include_articles: bool = True) -> str:
 
     """
-    Get full details of an OTOBO ticket by ID, including dynamic fields and optionally all articles.
+    Returns the details of an OTOBO ticket, including dynamic fields,
+    linked tickets and FAQ items, and optionally all articles.
+    The ticket, its articles and linked tickets each carry a url to open them in OTOBO.
 
     Args:
-        ticket_id: Numeric OTOBO ticket ID.
-        include_articles: Include articles/comments, default true.
+        ticket_id: numeric OTOBO ticket ID
+        include_articles: include all articles, default true
     """
     raw = domain.get_ticket_details.do_get_ticket(
         ticket_id, 
@@ -36,8 +35,7 @@ def get_ticket_details(ticket_id: int, include_articles: bool = True) -> str:
     )
 
     if not raw:
-        log.warning( f"Ticket {ticket_id} not found" )
-        return json.dumps({"error": f"Ticket {ticket_id} not found"})
+        raise ToolError(f"Ticket {ticket_id} not found")
 
     return json.dumps(otobo.filter_ticket(raw, include_articles))
 

@@ -2,7 +2,9 @@
 
 This is the OTOBO MCP server.
 It exposes parts of the OTOBO webservices to an LLM as part of the [otobo-ai-services](https://github.com/rotheross/otobo-ai-services).
-It assumes a running OTOBO instance with otobo-ai package installed.
+
+> [!IMPORTANT]
+> It assumes a running OTOBO instance with otobo-ai package installed.
 
 ## Available MCP Tools
 
@@ -15,17 +17,18 @@ It assumes a running OTOBO instance with otobo-ai package installed.
 |update_generated_response           | update the AI generated response for an article of a ticket in OTOBO |
 |find_similar_tickets                | find similar tickets in vector DB                   |
 |link_ticket_to_ticket               | link a ticket to another ticket in OTOBO            |
-|unlink_ticket_to_ticket             | remove a link from a ticket to another ticket       |
+|unlink_ticket_from_ticket           | remove a link from a ticket to another ticket       |
 |get_link_to_ticket                  | retrieve URL that links to a ticket in OTOBO        |
 |get_link_to_faq                     | retrieve URL that links to a FAQ item in OTOBO      |
 
 All tools - except for the last two link generation tools - need a valid
-OTOBO SessionID (sid). When the chat is invoked from OTOBO, this sid will be
-passed.
+OTOBO SessionID (sid).
+When the chat is invoked from OTOBO,
+this sid will be passed.
 
-Note: This sid will be bound to the AI chat and is not usable in another
-context.
-
+> [!NOTE]
+> This sid will be bound to the AI chat
+> and is not usable in another context.
 
 ## Build
 
@@ -51,9 +54,10 @@ cd it
 
 ### One Time Preparation
 
-To build the `.venv` - needed only once
+> [!TIP]
+> Building the `.venv` is needed only once.
 
-1) istall python 'uv' if not avail yer
+1) install python `uv` if not available yet
 
 ```sh
 # install python uv (here:ubuntu), or use pip
@@ -65,21 +69,22 @@ uv sync
 
 ### Init Virtual Env
 
-after the initial run, you can re-activate the
-the virtual env for the current terminal:
+After the initial run,
+you can re-activate the virtual env for the current terminal:
 
-```
+```sh
 source .venv/bin/activate
-
 ```
 
 ### Obtain OTOBO Session ID (sid)
 
-The MCP uses a OTOBO SessionID bound to the MCP server IP address.
+> [!NOTE]
+> The MCP uses an OTOBO SessionID bound to the MCP server IP address.
+
 For testing, obtain a session ID like so:
 
-``` 
-docker exec ti mcp curl -vk \
+```sh
+docker exec -ti mcp curl -vk \
   http://web:5000/otobo/nph-genericinterface.pl/Webservice/Session/Session \
   --header "Content-Type: application/json" \
   --data '{"UserLogin" : "root@localhost", "Password" : "root"}'
