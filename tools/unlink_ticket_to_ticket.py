@@ -8,6 +8,7 @@ import domain.unlink_ticket_to_ticket
 
 
 @otobo.tool(
+    confirmation = "Remove the link of type '{dir}' between ticket {ticket_id} and ticket {linked_ticket_id}?",
     annotations = {
         "title"           : "Remove a link to another OTOBO Ticket",
         "readOnlyHint"    : False,

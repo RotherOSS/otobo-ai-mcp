@@ -2,6 +2,7 @@
 import os
 import sys
 import jwt
+import anyio
 import logging
 import hashlib
 import inspect
@@ -9,11 +10,12 @@ import secrets
 import functools
 
 from typing import Annotated
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.server.transport_security import TransportSecuritySettings
+from mcp.types import ClientCapabilities, ElicitationCapability
 
 from mcp.server.auth.provider import AccessToken, TokenVerifier
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
@@ -57,6 +59,8 @@ class Settings:
         self.max_tokens    = int(os.environ.get("OTOBO_MCP_MAX_TOKENS", 8000))
         self.chars_per_token = int(os.environ.get("OTOBO_MCP_CHARS_PER_TOKEN", 3))
         self.stateless     = os.environ.get("OTOBO_MCP_STATELESS", "false").lower() in ("true", "1", "yes")
+        self.elicitation   = os.environ.get("OTOBO_MCP_ELICITATION", "required").lower()
+        self.elicitation_timeout = int(os.environ.get("OTOBO_MCP_ELICITATION_TIMEOUT", 300))
         # oauth2 only
         self.use_oauth2          = os.environ.get("OTOBO_MCP_OAUTH","false").lower() in ("true", "1", "yes")
         self.issuer_url          = AnyHttpUrl( os.environ.get("OTOBO_MCP_ISSUER_URL", "https://keycloak:8443/realms/master") )
@@ -91,6 +95,9 @@ for fence_template in (settings.fence_prefix, settings.fence_suffix):
 
 if settings.fence_prefix == settings.fence_suffix:
     sys.exit("OTOBO_MCP_FENCE_PREFIX and OTOBO_MCP_FENCE_SUFFIX must differ")
+
+if settings.elicitation not in ("required", "advised", "none"):
+    sys.exit(f"OTOBO_MCP_ELICITATION '{settings.elicitation}' must be one of required, advised, none")
 
 
 # Wrap tool output in a prefix and suffix fence carrying a fresh random nonce per call,
@@ -207,43 +214,109 @@ def paginate(output: str, max_tokens: int, chunk: int, result_hash: str | None) 
     return response
 
 
+# Write tools ask the user to confirm the action via MCP elicitation before executing it,
+# so a prompt injection cannot make the LLM change OTOBO data unnoticed.
+# OTOBO_MCP_ELICITATION decides what happens if the client does not support elicitation:
+#   required: the tool fails
+#   advised:  the tool runs without confirmation
+#   none:     never ask, eg for an AI agent acting without a user
+# Fail closed: anything but an accepted confirmation, eg decline, cancel, timeout or error, fails the tool.
+
+class Confirmation(BaseModel):
+    pass
+
+
+async def confirm(ctx: Context, message: str) -> None:
+
+    if settings.elicitation == "none":
+        return
+
+    if not ctx.session.check_client_capability(ClientCapabilities(elicitation=ElicitationCapability())):
+        if settings.elicitation == "advised":
+            return
+        raise ToolError(fence("The action needs the confirmation of the user, but the client does not support MCP elicitation"))
+
+    try:
+        with anyio.fail_after(settings.elicitation_timeout):
+            result = await ctx.elicit(message, Confirmation)
+    except TimeoutError as e:
+        raise ToolError(fence("The user did not confirm the action in time")) from e
+    except Exception as e:
+        raise ToolError(fence(f"Asking the user for confirmation failed: {e}")) from e
+
+    if result.action != "accept":
+        raise ToolError(fence(f"The user did not confirm the action: {result.action}"))
+
+
 def keyword_parameter(name: str, annotation, default) -> inspect.Parameter:
     return inspect.Parameter(name, inspect.Parameter.KEYWORD_ONLY, default=default, annotation=annotation)
 
 
-# Register a tool on the server, fencing its output and error messages.
+def run(fn, *fn_args, **fn_kwargs) -> str:
+    try:
+        return fn(*fn_args, **fn_kwargs)
+    except Exception as e:
+        raise ToolError(fence(str(e))) from e
+
+
 # Read-only tools get the parameters max_tokens, chunk and result_hash for pagination.
-# Write tools do not, as repeating their call would repeat the change.
+
+def paginated(fn):
+
+    @functools.wraps(fn)
+    def wrapper(*fn_args, max_tokens: int = settings.max_tokens, chunk: int = 1, result_hash: str | None = None, **fn_kwargs):
+        return paginate(run(fn, *fn_args, **fn_kwargs), max_tokens, chunk, result_hash)
+
+    signature = inspect.signature(fn)
+    wrapper.__signature__ = signature.replace(parameters=[
+        *signature.parameters.values(),
+        keyword_parameter("max_tokens", MaxTokens, settings.max_tokens),
+        keyword_parameter("chunk", Chunk, 1),
+        keyword_parameter("result_hash", ResultHash, None),
+    ])
+
+    return wrapper
+
+
+# Write tools are not paginated, as repeating their call would repeat the change.
+# They get the MCP context to ask the user for confirmation.
+# The confirmation is a message template filled with the arguments of the call.
+
+def confirmed(fn, confirmation: str):
+
+    signature = inspect.signature(fn)
+
+    @functools.wraps(fn)
+    async def wrapper(*fn_args, ctx: Context, **fn_kwargs):
+        arguments = signature.bind(*fn_args, **fn_kwargs)
+        arguments.apply_defaults()
+        await confirm(ctx, confirmation.format(**arguments.arguments))
+        return fence(run(fn, *fn_args, **fn_kwargs))
+
+    wrapper.__signature__ = signature.replace(parameters=[
+        *signature.parameters.values(),
+        keyword_parameter("ctx", Context, inspect.Parameter.empty),
+    ])
+    wrapper.__annotations__ = { **fn.__annotations__, "ctx": Context }
+
+    return wrapper
+
+
+# Register a tool on the server, fencing its output and error messages.
+# Write tools, ie readOnlyHint false, must pass a confirmation message.
 # Use it in place of server.tool, which leaves the output unfenced.
 
-def tool(**tool_kwargs):
+def tool(confirmation: str | None = None, **tool_kwargs):
 
     def register(fn):
 
-        read_only = tool_kwargs.get("annotations", {}).get("readOnlyHint", False)
+        if tool_kwargs.get("annotations", {}).get("readOnlyHint", False):
+            return server.tool(**tool_kwargs)(paginated(fn))
 
-        @functools.wraps(fn)
-        def fenced(*fn_args, max_tokens: int = settings.max_tokens, chunk: int = 1, result_hash: str | None = None, **fn_kwargs):
-            try:
-                output = fn(*fn_args, **fn_kwargs)
-            except Exception as e:
-                raise ToolError(fence(str(e))) from e
+        if confirmation is None:
+            sys.exit(f"write tool {fn.__name__} needs a confirmation message")
 
-            if not read_only:
-                return fence(output)
-
-            return paginate(output, max_tokens, chunk, result_hash)
-
-        if read_only:
-            signature = inspect.signature(fn)
-            fenced.__signature__ = signature.replace(parameters=[
-                *signature.parameters.values(),
-                keyword_parameter("max_tokens", MaxTokens, settings.max_tokens),
-                keyword_parameter("chunk", Chunk, 1),
-                keyword_parameter("result_hash", ResultHash, None),
-            ])
-
-        return server.tool(**tool_kwargs)(fenced)
+        return server.tool(**tool_kwargs)(confirmed(fn, confirmation))
 
     return register
 

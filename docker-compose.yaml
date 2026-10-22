@@ -30,6 +30,9 @@ services:
         - OTOBO_MCP_CHARS_PER_TOKEN=3
         # run without MCP sessions, eg for several workers
         - OTOBO_MCP_STATELESS=false
+        # user confirmation of write tools: required, advised or none
+        - OTOBO_MCP_ELICITATION=required
+        - OTOBO_MCP_ELICITATION_TIMEOUT=300
         # oauth specific
         - OTOBO_MCP_OAUTH=false
         - OTOBO_MCP_ISSUER_URL=https://keycloak:8443/realms/master

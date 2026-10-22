@@ -18,6 +18,8 @@ Environment:
     OTOBO_MCP_MAX_TOKENS           default token limit of a read-only tool result, longer results are chunked (default: 8000)
     OTOBO_MCP_CHARS_PER_TOKEN      characters per token to estimate the token count (default: 3)
     OTOBO_MCP_STATELESS            run streamable-http without MCP sessions, eg for several workers (default: false)
+    OTOBO_MCP_ELICITATION          user confirmation of write tools: required, advised or none (default: required)
+    OTOBO_MCP_ELICITATION_TIMEOUT  seconds to wait for the user's confirmation (default: 300)
     OTOBO_MCP_OAUTH                use OAuth2 bearer tokens instead of OTOBO session IDs (default: false)
     OTOBO_MCP_ISSUER_URL           OIDC compatible OAuth2 authorization server issuer url, eg https://keycloak:8443/realms/master
     OTOBO_MCP_RESOURCE_SERVER_URL  url to self, eg http://mcp:8765/mcp

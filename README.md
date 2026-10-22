@@ -71,6 +71,37 @@ If the data changed in between, the `result_hash` no longer matches and the LLM 
 > [!NOTE]
 > Write tools are not chunked, as repeating their call would repeat the change.
 
+## Confirmation of Write Tools
+
+Before a write tool changes OTOBO data,
+the user is asked to confirm the action via [MCP elicitation](https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation),
+eg:
+
+```
+Move ticket 4711 to queue 'IT'?
+```
+
+So a prompt injection cannot make the LLM change data unnoticed.
+The tool fails if the user declines, cancels or does not respond within `OTOBO_MCP_ELICITATION_TIMEOUT` seconds.
+
+`OTOBO_MCP_ELICITATION` decides whether the confirmation is
+
+| value      | behaviour                                                             |
+|------------|-----------------------------------------------------------------------|
+| `required` | requested, write tools fail if the client does not support elicitation |
+| `advised`  | requested only if the client supports elicitation                     |
+| `none`     | never requested, eg for an AI agent acting without a user             |
+
+The default is `required`.
+
+> [!NOTE]
+> Write tools, ie with `readOnlyHint` false, must pass a `confirmation` message to `@otobo.tool(...)`.
+> It is a template filled with the arguments of the call, eg `"Move ticket {ticket_id} to queue '{destination_queue}'?"`.
+
+> [!IMPORTANT]
+> With `OTOBO_MCP_STATELESS` the server does not know the client capabilities,
+> so `required` lets all write tools fail and `advised` never asks.
+
 ## Build
 
 To build the server

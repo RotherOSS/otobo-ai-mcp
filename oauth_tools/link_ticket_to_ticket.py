@@ -9,6 +9,7 @@ import domain.link_ticket_to_ticket
 from mcp.server.auth.middleware.auth_context import get_access_token
 
 @otobo.tool(
+    confirmation = "Link ticket {ticket_id} to ticket {linked_ticket_id} with link type '{dir}'?",
     annotations = {
         "title"           : "Add a link to another OTOBO Ticket",
         "readOnlyHint"    : False,

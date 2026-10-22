@@ -6,6 +6,7 @@ import domain.transfer_ticket_to_destination_queue
 
 
 @otobo.tool(
+    confirmation = "Move ticket {ticket_id} to queue '{destination_queue}'?",
     annotations = {
         "title"           : "Transfer ticket to destination queue in OTOBO",
         "readOnlyHint"    : False,

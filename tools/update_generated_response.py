@@ -6,6 +6,7 @@ import domain.update_generated_response
 
 
 @otobo.tool(
+    confirmation = "Store the following generated response in ticket {ticket_id}, article {article_id} (None meaning the last customer article)?\n\n{generated_response}",
     annotations = {
         "title"           : "Update generated ticket response in OTOBO",
         "readOnlyHint"    : False,
