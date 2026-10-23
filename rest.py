@@ -11,11 +11,16 @@ class APIError(Exception):
     pass
 
 
+# error messages of requests may contain the URL, which carries the SessionID of GET requests
+def masked_sid(text: str, sid: str = None) -> str:
+    return text.replace(sid, "***") if sid else text
+
+
 def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
 
-    otobo.log.debug( f"POST url: {url}")
+    otobo.log.debug("POST %s %s", url, otobo.masked(payload))
 
     headers = {"Content-Type": "application/json"}
     if bearer is not None:
@@ -32,7 +37,9 @@ def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = N
             timeout = otobo.settings.timeout
         )
     except requests.RequestException as e:
-        raise APIError(f"Connection error: {e}") from e
+        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
+
+    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
 
     if resp.status_code != 200:
         raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
@@ -49,7 +56,7 @@ def put_operation(operation: str, payload: dict, bearer:str = None, sid:str = No
 
     url = otobo.settings.operation_url(operation)
 
-    otobo.log.debug( f"PUT url: {url}")
+    otobo.log.debug("PUT %s %s", url, otobo.masked(payload))
 
     headers = {"Content-Type": "application/json"}
     if bearer is not None:
@@ -66,7 +73,9 @@ def put_operation(operation: str, payload: dict, bearer:str = None, sid:str = No
             timeout = otobo.settings.timeout
         )
     except requests.RequestException as e:
-        raise APIError(f"Connection error: {e}") from e
+        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
+
+    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
 
     if resp.status_code != 200:
         raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
@@ -82,7 +91,7 @@ def put_operation(operation: str, payload: dict, bearer:str = None, sid:str = No
 def get_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
-    otobo.log.debug( f"GET url: {url}, {payload}")
+    otobo.log.debug("GET %s %s", url, otobo.masked(payload))
 
     headers = {"Content-Type": "application/json"}
     if bearer is not None:
@@ -99,7 +108,9 @@ def get_operation(operation: str, payload: dict, bearer:str = None, sid:str = No
             timeout = otobo.settings.timeout
         )
     except requests.RequestException as e:
-        raise APIError(f"Connection error: {e}") from e
+        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
+
+    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
 
     if resp.status_code != 200:
         raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
@@ -115,7 +126,7 @@ def get_operation(operation: str, payload: dict, bearer:str = None, sid:str = No
 def delete_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
-    otobo.log.debug( f"DELETE url: {url}, {payload}")
+    otobo.log.debug("DELETE %s %s", url, otobo.masked(payload))
 
     headers = {"Content-Type": "application/json"}
     if bearer is not None:
@@ -132,7 +143,9 @@ def delete_operation(operation: str, payload: dict, bearer:str = None, sid:str =
             timeout = otobo.settings.timeout
         )
     except requests.RequestException as e:
-        raise APIError(f"Connection error: {e}") from e
+        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
+
+    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
 
     if resp.status_code != 200:
         raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")

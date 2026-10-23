@@ -11,7 +11,8 @@ Environment:
     OTOBO_MCP_SSL_VERIFY           SSL verification (default: false)
     OTOBO_MCP_TIMEOUT              HTTP timeout in seconds (default: 30)
     OTOBO_MCP_TRANSPORT            Transport: stdio, sse, streamable-http (default: streamable-http)
-    OTOBO_MCP_LOGLEVEL             log level as number or name, eg 20 or INFO (default: 40 = ERROR)
+    OTOBO_MCP_LOGLEVEL             log level as number or name (default: 20 = INFO):
+                                   50 = CRITICAL, 40 = ERROR, 30 = WARNING, 20 = INFO, 10 = DEBUG, 0 = NOTSET (all)
     OTOBO_MCP_ENABLED_TOOLS        comma separated list of tools to enable (default: all)
     OTOBO_MCP_FENCE_PREFIX         line before each tool result, must contain {nonce} (default: <<<OTOBO_DATA_BEGIN {nonce}>>>)
     OTOBO_MCP_FENCE_SUFFIX         line after each tool result, must contain {nonce} (default: <<<OTOBO_DATA_END {nonce}>>>)
@@ -36,6 +37,8 @@ import otobo
 # or the plain OTOBO_SESSIONID based tools
 
 tools_prefix = "oauth_tools." if otobo.settings.use_oauth2 else "tools."
+
+otobo.log.info("enabled tools: %s", ", ".join(otobo.settings.enabled_tools))
 
 for tool in otobo.settings.enabled_tools:
 

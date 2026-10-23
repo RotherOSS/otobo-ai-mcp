@@ -102,6 +102,30 @@ The default is `required`.
 > With `OTOBO_MCP_STATELESS` the server does not know the client capabilities,
 > so `required` lets all write tools fail and `advised` never asks.
 
+## Logging
+
+The server logs to stdout,
+except for the `stdio` transport,
+which needs stdout for the MCP protocol and logs to stderr.
+
+`OTOBO_MCP_LOGLEVEL` sets the [log level](https://docs.python.org/3/library/logging.html#logging-levels) as number or name.
+Each level includes the messages of the levels above.
+
+| level | name       | logged                                                                             |
+|-------|------------|------------------------------------------------------------------------------------|
+| 50    | `CRITICAL` | critical errors of libraries only                                                  |
+| 40    | `ERROR`    | failed tool calls and failed requests for confirmation                             |
+| 30    | `WARNING`  | warnings of libraries only, eg uvicorn                                             |
+| 20    | `INFO`     | startup, enabled tools, tool calls and the user's confirmations (default)          |
+| 10    | `DEBUG`    | tool input and output, OTOBO requests and responses, settings, OAuth2 token claims |
+| 0     | `NOTSET`   | everything, like `DEBUG`                                                           |
+
+The aliases `FATAL` for `CRITICAL` and `WARN` for `WARNING` are accepted, too.
+
+> [!WARNING]
+> Debug output contains ticket data and personal data.
+> Session IDs are masked.
+
 ## Build
 
 To build the server
