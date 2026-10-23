@@ -1,16 +1,12 @@
 import json
-import logging
-
-from typing import Any
 
 import otobo
-import rest
 
 import domain.transfer_ticket_to_destination_queue
 
 
-@rest.HandleAPIError
-@otobo.server.tool(
+@otobo.tool(
+    confirmation = "Move ticket {ticket_id} to queue '{destination_queue}'?",
     annotations = {
         "title"           : "Transfer ticket to destination queue in OTOBO",
         "readOnlyHint"    : False,
@@ -22,19 +18,14 @@ import domain.transfer_ticket_to_destination_queue
 def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str, otobo_sid : str = '') -> str:
 
     """
-    Move Ticket to new destination queue.
+    Moves an OTOBO ticket to another queue.
 
     Args:
-        ticket_id: Numeric OTOBO ticket ID.
-        destination_queue: Name of the destination queue
-        otobo_sid: the OTOBO sessionID
+        ticket_id: numeric OTOBO ticket ID
+        destination_queue: name of the destination queue
+        otobo_sid: OTOBO session ID used for authentication
     """
 
     raw = domain.transfer_ticket_to_destination_queue.do_transfer_ticket( ticket_id, destination_queue, sid=otobo_sid)
 
-    if not raw:
-        log.warning( f"Ticket {ticket_id} not found" )
-        return json.dumps({"error": f"Ticket {ticket_id} not found"})
-
-    return json.dumps(raw)
-
+    return json.dumps(raw, sort_keys=True)

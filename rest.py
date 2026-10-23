@@ -1,11 +1,6 @@
 
-import os
-import sys
 import json
-import logging
 import requests
-
-from typing import Any
 
 import otobo
 
@@ -14,28 +9,6 @@ import otobo
 
 class APIError(Exception):
     pass
-
-
-# decorator
-def HandleAPIError(fun):
-
-    def inner(*args,**kwargs):
-
-        if not otobo.settings.internal_url:
-            return json.dumps({"error": "OTOBO_HOST is not configured"})
-
-        result = None
-        try:
-            result = fun(*args,**kwargs)
-        except APIError as e:
-            otobo.log.warning( str(e) )
-            return json.dumps({"error": str(e)})
-
-        return result
-
-
-    return inner
-
 
 
 def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:

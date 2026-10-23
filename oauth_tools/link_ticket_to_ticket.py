@@ -1,17 +1,15 @@
 import json
-import logging
 
-from typing import Any
+from typing import Literal
 
 import otobo
-import rest
 
 import domain.link_ticket_to_ticket
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
-@rest.HandleAPIError
-@otobo.server.tool(
+@otobo.tool(
+    confirmation = "Link ticket {ticket_id} to ticket {linked_ticket_id} with link type '{dir}'?",
     annotations = {
         "title"           : "Add a link to another OTOBO Ticket",
         "readOnlyHint"    : False,
@@ -21,17 +19,17 @@ from mcp.server.auth.middleware.auth_context import get_access_token
     }
 )
 
-def link_ticket_to_ticket( ticket_id: str, linked_ticket_id: str, dir: str = 'Normal'  ) -> str:
+def link_ticket_to_ticket( ticket_id: str, linked_ticket_id: str, dir: Literal["Normal", "ParentChild"] = 'Normal'  ) -> str:
 
     """
-    Link an OTOBO ticket to another OTOBO Ticket
+    Links an OTOBO ticket to another OTOBO ticket.
 
     Args:
-        ticket_id : ticket to link from
-        linked_ticket_id : ticket to link to
-        dir : link type, default to 'Normal'
+        ticket_id: source ticket of the link, the parent for link type ParentChild
+        linked_ticket_id: target ticket of the link, the child for link type ParentChild
+        dir: link type, default 'Normal'
     """
-        
+
     raw = domain.link_ticket_to_ticket.do_link_ticket( 
         type             = 'Ticket', 
         ticket_id        = ticket_id, 
@@ -41,10 +39,6 @@ def link_ticket_to_ticket( ticket_id: str, linked_ticket_id: str, dir: str = 'No
         bearer           = get_access_token().token
     )
 
-    if not raw:
-        log.warning( f"Empty search result" )
-        return json.dumps({"error": f"Empty search result"})
-
-    return json.dumps(raw)
+    return json.dumps(raw, sort_keys=True)
 
 

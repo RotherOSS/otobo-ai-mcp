@@ -1,11 +1,9 @@
 # Base image with Python
 FROM python:3.12-slim
 
-# Install build tools and useful Debian packages
+# curl is used to obtain an OTOBO session ID for testing, see README
 RUN apt-get update \
     && apt-get -y --no-install-recommends install \
-    tree \
-    vim \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -23,6 +21,9 @@ COPY ./rest.py /mcp/rest.py
 COPY ./domain /mcp/domain
 COPY ./tools /mcp/tools
 COPY ./oauth_tools /mcp/oauth_tools
+
+RUN useradd --system --no-create-home mcp
+USER mcp
 
 # RUN
 ENTRYPOINT [ "python", "/mcp/server.py" ]

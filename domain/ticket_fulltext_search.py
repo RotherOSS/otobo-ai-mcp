@@ -1,16 +1,9 @@
 
-import os
-import sys
-import json
-import logging
-
-from typing import Any
-
 import otobo
 import rest
 
 
-def do_ticket_fulltext_search( search_term: str, max_number_of_results: int, sid : str = None, bearer:str = None ) -> str:
+def do_ticket_fulltext_search( search_term: str, max_number_of_results: int, sid : str = None, bearer:str = None ) -> list[dict]:
 
     payload = {
         'Fulltext'     : search_term,
@@ -24,7 +17,7 @@ def do_ticket_fulltext_search( search_term: str, max_number_of_results: int, sid
         bearer = bearer,
     )
 
-    data = data.get("ticket")
+    data = data.get("ticket") or []
 
     if isinstance(data,dict):
         data = [ data ]
@@ -35,4 +28,3 @@ def do_ticket_fulltext_search( search_term: str, max_number_of_results: int, sid
             item["url"] = otobo.settings.ticket_url( item["ticket_id"] )
 
     return data
-

@@ -1,16 +1,9 @@
 
-import os
-import sys
-import json
-import logging
-
-from typing import Any
-
 import otobo
 import rest
 
 
-def do_faq_fulltext_search( search_term: str, max_number_of_results: int, bearer:str = None, sid:str = None) -> str:
+def do_faq_fulltext_search( search_term: str, max_number_of_results: int, bearer:str = None, sid:str = None) -> list[dict]:
 
     payload = {
         'Fulltext'     : search_term,
@@ -24,7 +17,7 @@ def do_faq_fulltext_search( search_term: str, max_number_of_results: int, bearer
         sid    = sid,
     )
 
-    data = data.get("faq")
+    data = data.get("faq") or []
 
     if isinstance(data,dict):
         data = [ data ]
@@ -35,5 +28,4 @@ def do_faq_fulltext_search( search_term: str, max_number_of_results: int, bearer
             item["url"] = otobo.settings.faq_url(item["faq_id"])
 
     return data
-
 

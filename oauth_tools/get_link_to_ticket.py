@@ -1,13 +1,9 @@
 import json
-import logging
-
-from typing import Any
 
 import otobo
-import rest
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Get a direct link for a ticket in OTOBO",
         "readOnlyHint"    : True,
@@ -17,10 +13,10 @@ import rest
     })
 def get_link_to_ticket(ticket_id: int) -> str:
     """
-    Get a valid HTTP link to browse to a specific ticket_id in OTOBO.
+    Returns the HTTP URL that opens the given ticket in the OTOBO agent interface.
 
     Args:
-        ticket_id: Numeric OTOBO ticket ID.
+        ticket_id: numeric OTOBO ticket ID
     """
 
     return json.dumps( otobo.settings.ticket_url(ticket_id) )

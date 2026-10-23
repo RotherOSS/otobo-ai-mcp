@@ -1,13 +1,9 @@
 import json
-import logging
-
-from typing import Any
 
 import otobo
-import rest
 
 
-@otobo.server.tool(
+@otobo.tool(
     annotations = {
         "title"           : "Get a direct link to a FAQ in OTOBO",
         "readOnlyHint"    : True,
@@ -17,14 +13,10 @@ import rest
     })
 def get_link_to_faq(faq_id: int) -> str:
     """
-    Get a valid HTTP link to browse to a specific faq_id in OTOBO.
+    Returns the HTTP URL that opens the given FAQ item in the OTOBO agent interface.
 
     Args:
-        faq_id: Numeric OTOBO ticket ID.
+        faq_id: numeric OTOBO FAQ item ID
     """
 
     return json.dumps( otobo.settings.faq_url(faq_id) )
-
-
-
-
