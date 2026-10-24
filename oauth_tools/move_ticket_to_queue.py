@@ -2,35 +2,34 @@ import json
 
 import otobo
 
-import domain.transfer_ticket_to_destination_queue
+import domain.move_ticket_to_queue
 
 from mcp.server.auth.middleware.auth_context import get_access_token
+
 
 @otobo.tool(
     confirmation = "Move ticket {ticket_id} to queue '{destination_queue}'?",
     annotations = {
-        "title"           : "Transfer ticket to destination queue in OTOBO",
+        "title"           : "Move ticket to queue",
         "readOnlyHint"    : False,
         "idempotentHint"  : True,
         "destructiveHint" : True,
         "openWorldHint"   : False,
     }
 )
-def transfer_ticket_to_destination_queue(ticket_id: int, destination_queue: str ) -> str:
+def move_ticket_to_queue(ticket_id: int, destination_queue: str) -> str:
 
     """
     Moves an OTOBO ticket to another queue.
 
     Args:
-        ticket_id: numeric OTOBO ticket ID
-        destination_queue: name of the destination queue
+        destination_queue: queue name
     """
 
-    raw = domain.transfer_ticket_to_destination_queue.do_transfer_ticket( 
-        ticket_id, 
-        destination_queue, 
+    raw = domain.move_ticket_to_queue.do_move_ticket(
+        ticket_id,
+        destination_queue,
         bearer = get_access_token().token
     )
 
     return json.dumps(raw, sort_keys=True)
-

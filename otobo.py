@@ -25,15 +25,13 @@ from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
 
 default_tools_enabled = ",".join([
     "faq_fulltext_search",
-    "get_link_to_faq",
     "get_ticket_details",
     "get_articles",
     "ticket_fulltext_search",
-    "unlink_ticket_to_ticket",
+    "unlink_ticket_from_ticket",
     "find_similar_tickets",
-    "get_link_to_ticket",
     "link_ticket_to_ticket",
-    "transfer_ticket_to_destination_queue",
+    "move_ticket_to_queue",
     "update_generated_response"
 ])
 
@@ -74,9 +72,6 @@ class Settings:
 
     def operation_url(self, operation: str) -> str:
         return f"{self.internal_url}/otobo/nph-genericinterface.pl/Webservice/{self.webservice}/{operation}"
-
-    def api_base_url(self) -> str:
-        return f"{self.internal_url}/otobo/"
 
     def ticket_url(self, ticket_id) -> str:
         return f"{self.public_url}?Action=AgentTicketZoom;TicketID={ticket_id}"
@@ -353,12 +348,12 @@ def tool(confirmation: str | None = None, **tool_kwargs):
     def register(fn):
 
         if tool_kwargs.get("annotations", {}).get("readOnlyHint", False):
-            return server.tool(**tool_kwargs)(paginated(fn))
+            return server.tool(structured_output=False, **tool_kwargs)(paginated(fn))
 
         if confirmation is None:
             sys.exit(f"write tool {fn.__name__} needs a confirmation message")
 
-        return server.tool(**tool_kwargs)(confirmed(fn, confirmation))
+        return server.tool(structured_output=False, **tool_kwargs)(confirmed(fn, confirmation))
 
     return register
 
@@ -449,8 +444,8 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> tuple[str, str
     del out["article"]
     out["article_list"] = article_list(articles)
     hint = (
-        "The ticket is too long to return its articles in full, article_list lists them without their content. "
-        f"Read the articles needed with get_articles(ticket_id={ticket['ticket_id']}, article_ids=[...]), several in one call."
+        "The ticket is too long, so article_list lists its articles without content. "
+        f"Read the articles needed in one call of get_articles(ticket_id={ticket['ticket_id']}, article_ids=[...])."
     )
 
     return json.dumps(out, sort_keys=True), hint

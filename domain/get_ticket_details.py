@@ -2,7 +2,7 @@
 import rest
 
 
-def do_get_ticket(ticket_id: int, all_articles: bool = True, bearer:str = None, sid:str = None) -> dict:
+def do_get_ticket(ticket_id: int, all_articles: bool = True, sid: str = None, bearer: str = None) -> dict:
 
     payload = {
         "AllArticles": "1" if all_articles else "0",

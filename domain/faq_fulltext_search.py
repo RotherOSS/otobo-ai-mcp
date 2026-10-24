@@ -3,18 +3,18 @@ import otobo
 import rest
 
 
-def do_faq_fulltext_search( search_term: str, max_number_of_results: int, bearer:str = None, sid:str = None) -> list[dict]:
+def do_faq_fulltext_search( search_term: str, limit: int, sid: str = None, bearer: str = None) -> list[dict]:
 
     payload = {
         'Fulltext'     : search_term,
-        "Limit"        : max_number_of_results
+        "Limit"        : limit
     }
 
     data = rest.get_operation(
         "FAQ",
         payload,
-        bearer = bearer,
         sid    = sid,
+        bearer = bearer,
     )
 
     data = data.get("faq") or []

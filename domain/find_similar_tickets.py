@@ -13,7 +13,7 @@ def collect_source_ids(raw, source_ids: dict) -> None:
             source_ids[metadata["source_id"]] = 1
 
 
-def do_find_similar_tickets( ticket_id: str, article_id: str | None, bearer:str = None, sid:str = None ) -> dict:
+def do_find_similar_tickets( ticket_id: int, article_id: int | None, sid: str = None, bearer: str = None ) -> dict:
 
     payload = {}
 

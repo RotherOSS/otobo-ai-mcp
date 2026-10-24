@@ -6,9 +6,10 @@ import domain.get_ticket_details
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
+
 @otobo.tool(
     annotations = {
-        "title"           : "Get ticket details from OTOBO",
+        "title"           : "Get ticket details",
         "readOnlyHint"    : True,
         "idempotentHint"  : True,
         "destructiveHint" : False,
@@ -18,19 +19,15 @@ from mcp.server.auth.middleware.auth_context import get_access_token
 def get_ticket_details(ticket_id: int, include_articles: bool = True) -> tuple[str, str | None]:
 
     """
-    Returns the details of an OTOBO ticket, including dynamic fields,
-    linked tickets and FAQ items, and optionally its articles.
-    If the ticket is too long, article_list gives each article's ID, sender, subject and size,
-    but not its content, then use get_articles to read the articles needed.
-    The ticket and linked tickets each carry a url to open them in OTOBO.
-
-    Args:
-        ticket_id: numeric OTOBO ticket ID
-        include_articles: include the articles, default true
+    Returns an OTOBO ticket with its dynamic fields, linked tickets and FAQ items,
+    and optionally its articles, each with their url.
+    If the ticket is too long, article_list lists the articles without content,
+    read them with get_articles.
     """
+
     raw = domain.get_ticket_details.do_get_ticket(
-        ticket_id, 
-        all_articles = include_articles, 
+        ticket_id,
+        all_articles = include_articles,
         bearer       = get_access_token().token
     )
 
@@ -38,5 +35,3 @@ def get_ticket_details(ticket_id: int, include_articles: bool = True) -> tuple[s
         raise ToolError(f"Ticket {ticket_id} not found")
 
     return otobo.filter_ticket(raw, include_articles)
-
-

@@ -1,4 +1,3 @@
-
 import json
 import requests
 
@@ -16,11 +15,12 @@ def masked_sid(text: str, sid: str = None) -> str:
     return text.replace(sid, "***") if sid else text
 
 
-def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
+# GET and DELETE send the payload as URL parameters, PUT as JSON body.
+
+def request(method: str, operation: str, payload: dict, sid: str = None, bearer: str = None) -> dict:
 
     url = otobo.settings.operation_url(operation)
-
-    otobo.log.debug("POST %s %s", url, otobo.masked(payload))
+    otobo.log.debug("%s %s %s", method, url, otobo.masked(payload))
 
     headers = {"Content-Type": "application/json"}
     if bearer is not None:
@@ -28,13 +28,19 @@ def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = N
     elif sid is not None:
         payload["SessionID"] = sid
 
+    if method in ("GET", "DELETE"):
+        payload_kwargs = { "params": payload }
+    else:
+        payload_kwargs = { "data": json.dumps(payload) }
+
     try:
-        resp = requests.post(
+        resp = requests.request(
+            method,
             url,
             headers = headers,
-            data    = json.dumps(payload),
             verify  = otobo.settings.ssl_verify,
-            timeout = otobo.settings.timeout
+            timeout = otobo.settings.timeout,
+            **payload_kwargs,
         )
     except requests.RequestException as e:
         raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
@@ -45,116 +51,20 @@ def post_operation(operation: str, payload: dict, bearer:str = None, sid:str = N
         raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
 
     data = resp.json()
-    if data.get("Error"):
+    if isinstance(data, dict) and data.get("Error"):
         err = data["Error"]
         raise APIError(f"{err.get('ErrorCode', '?')}: {err.get('ErrorMessage', '?')}")
 
     return data
 
 
-def put_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
-
-    url = otobo.settings.operation_url(operation)
-
-    otobo.log.debug("PUT %s %s", url, otobo.masked(payload))
-
-    headers = {"Content-Type": "application/json"}
-    if bearer is not None:
-        headers["Authorization"] = "bearer " + bearer
-    elif sid is not None:
-        payload["SessionID"] = sid
-
-    try:
-        resp = requests.put(
-            url,
-            headers = headers,
-            data    = json.dumps(payload),
-            verify  = otobo.settings.ssl_verify,
-            timeout = otobo.settings.timeout
-        )
-    except requests.RequestException as e:
-        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
-
-    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
-
-    if resp.status_code != 200:
-        raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
-
-    data = resp.json()
-    if data.get("Error"):
-        err = data["Error"]
-        raise APIError(f"{err.get('ErrorCode', '?')}: {err.get('ErrorMessage', '?')}")
-
-    return data
+def get_operation(operation: str, payload: dict, sid: str = None, bearer: str = None) -> dict:
+    return request("GET", operation, payload, sid=sid, bearer=bearer)
 
 
-def get_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
-
-    url = otobo.settings.operation_url(operation)
-    otobo.log.debug("GET %s %s", url, otobo.masked(payload))
-
-    headers = {"Content-Type": "application/json"}
-    if bearer is not None:
-        headers["Authorization"] = "bearer " + bearer
-    elif sid is not None:
-        payload["SessionID"] = sid
-
-    try:
-        resp = requests.get(
-            url,
-            headers = headers,
-            params  = payload,
-            verify  = otobo.settings.ssl_verify,
-            timeout = otobo.settings.timeout
-        )
-    except requests.RequestException as e:
-        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
-
-    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
-
-    if resp.status_code != 200:
-        raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
-
-    data = resp.json()
-    if isinstance(data,dict) and data.get("Error"):
-        err = data["Error"]
-        raise APIError(f"{err.get('ErrorCode', '?')}: {err.get('ErrorMessage', '?')}")
-
-    return data
+def put_operation(operation: str, payload: dict, sid: str = None, bearer: str = None) -> dict:
+    return request("PUT", operation, payload, sid=sid, bearer=bearer)
 
 
-def delete_operation(operation: str, payload: dict, bearer:str = None, sid:str = None) -> dict:
-
-    url = otobo.settings.operation_url(operation)
-    otobo.log.debug("DELETE %s %s", url, otobo.masked(payload))
-
-    headers = {"Content-Type": "application/json"}
-    if bearer is not None:
-        headers["Authorization"] = "bearer " + bearer
-    elif sid is not None:
-        payload["SessionID"] = sid
-
-    try:
-        resp = requests.delete(
-            url,
-            headers = headers,
-            params  = payload,
-            verify  = otobo.settings.ssl_verify,
-            timeout = otobo.settings.timeout
-        )
-    except requests.RequestException as e:
-        raise APIError(f"Connection error: {masked_sid(str(e), sid)}") from e
-
-    otobo.log.debug("response %s: %s", resp.status_code, resp.text)
-
-    if resp.status_code != 200:
-        raise APIError(f"HTTP {resp.status_code}: {resp.reason} - {resp.text[:300]}")
-
-    data = resp.json()
-    if data.get("Error"):
-        err = data["Error"]
-        raise APIError(f"{err.get('ErrorCode', '?')}: {err.get('ErrorMessage', '?')}")
-
-    return data
-
-
+def delete_operation(operation: str, payload: dict, sid: str = None, bearer: str = None) -> dict:
+    return request("DELETE", operation, payload, sid=sid, bearer=bearer)
