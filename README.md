@@ -14,16 +14,13 @@ It exposes parts of the OTOBO webservices to an LLM as part of the [otobo-ai-ser
 |faq_fulltext_search                 | does a fulltext search in ES for FAQs               |
 |get_ticket_details                  | retrieve ticket detail data including articles and links |
 |get_articles                        | retrieve selected articles of a ticket too long for get_ticket_details |
-|transfer_ticket_to_destination_queue| move ticket to another queue                        |
+|move_ticket_to_queue                | move ticket to another queue                        |
 |update_generated_response           | update the AI generated response for an article of a ticket in OTOBO |
 |find_similar_tickets                | find similar tickets in vector DB                   |
 |link_ticket_to_ticket               | link a ticket to another ticket in OTOBO            |
 |unlink_ticket_from_ticket           | remove a link from a ticket to another ticket       |
-|get_link_to_ticket                  | retrieve URL that links to a ticket in OTOBO        |
-|get_link_to_faq                     | retrieve URL that links to a FAQ item in OTOBO      |
 
-All tools - except for the last two link generation tools - need a valid
-OTOBO SessionID (sid).
+All tools need a valid OTOBO SessionID (sid).
 When the chat is invoked from OTOBO,
 this sid will be passed.
 

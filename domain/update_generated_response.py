@@ -2,7 +2,7 @@
 import rest
 
 
-def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, article_id: int, sid:str = None, bearer:str = None) -> dict:
+def do_update_article_df( dfname: str, ticket_id: int, generated_response: str, article_id: int, sid: str = None, bearer: str = None) -> dict:
 
     payload = {
         'DynamicField' : {

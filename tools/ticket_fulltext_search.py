@@ -7,26 +7,24 @@ import domain.ticket_fulltext_search
 
 @otobo.tool(
     annotations = {
-        "title"           : "Ticket fulltext search",
+        "title"           : "Search tickets",
         "readOnlyHint"    : True,
         "idempotentHint"  : True,
         "destructiveHint" : False,
         "openWorldHint"   : False,
     }
 )
-def ticket_fulltext_search( search_term: str, otobo_sid : str = '', max_number_of_results: int = 10  ) -> str:
+def ticket_fulltext_search(otobo_sid: str, search_term: str, limit: int = 10) -> str:
 
     """
-    Fulltext search in OTOBO tickets.
-    Returns a list of matching tickets, each with a url to open it in OTOBO.
-    Returns an empty list if nothing matches.
+    Searches OTOBO tickets by fulltext.
+    Returns the matching tickets with their url, or an empty list.
 
     Args:
-        search_term: the search query term
-        otobo_sid: OTOBO session ID used for authentication
-        max_number_of_results: maximum number of tickets returned
+        otobo_sid: OTOBO session ID
+        limit: maximum number of tickets
     """
 
-    raw = domain.ticket_fulltext_search.do_ticket_fulltext_search( search_term, max_number_of_results, sid=otobo_sid)
+    raw = domain.ticket_fulltext_search.do_ticket_fulltext_search( search_term, limit, sid=otobo_sid)
 
     return json.dumps(raw, sort_keys=True)

@@ -15,7 +15,7 @@ import domain.update_generated_response
         "openWorldHint"   : False,
     }
 )
-def update_generated_response(ticket_id: int, generated_response: str, article_id: int = None, otobo_sid : str = '') -> str:
+def update_generated_response(ticket_id: int, generated_response: str, article_id: int | None = None, otobo_sid : str = '') -> str:
 
     """
     Stores an AI generated answer suggestion in the dynamic field OTOBOAI of a ticket article,
