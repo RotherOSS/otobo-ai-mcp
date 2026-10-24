@@ -21,7 +21,8 @@ def get_articles(otobo_sid: str, ticket_id: int, article_ids: list[int]) -> str:
     """
     Returns articles of an OTOBO ticket with their content and url.
     Use it for a ticket too long for get_ticket_details, with the IDs of its article_list.
-    Request all articles needed in one call.
+    Request only the articles needed. If they are many, request them in several calls,
+    each with articles whose body_tokens in article_list sum up to less than the limit named by get_ticket_details.
 
     Args:
         otobo_sid: OTOBO session ID

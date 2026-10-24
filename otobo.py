@@ -445,7 +445,8 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> tuple[str, str
     out["article_list"] = article_list(articles)
     hint = (
         "The ticket is too long, so article_list lists its articles without content. "
-        f"Read the articles needed in one call of get_articles(ticket_id={ticket['ticket_id']}, article_ids=[...])."
+        f"Read only the articles needed with get_articles(ticket_id={ticket['ticket_id']}, article_ids=[...]), "
+        f"in several calls if needed, each with articles whose body_tokens sum up to less than {settings.max_tokens}."
     )
 
     return json.dumps(out, sort_keys=True), hint
