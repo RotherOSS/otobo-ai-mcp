@@ -9,3 +9,5 @@ wheels/
 .venv
 
 .env
+
+log

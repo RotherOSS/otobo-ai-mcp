@@ -1,5 +1,3 @@
-import json
-
 from mcp.server.fastmcp.exceptions import ToolError
 
 import otobo
@@ -18,12 +16,11 @@ from mcp.server.auth.middleware.auth_context import get_access_token
         "openWorldHint"   : False,
     }
 )
-def get_articles(ticket_id: int, article_ids: list[int]) -> str:
+def get_articles(ticket_id: int, article_ids: list[int]) -> tuple[str, str | None]:
 
     """
-    Returns articles of an OTOBO ticket with their content and url.
-    Use it for a ticket too long for get_ticket_details, with the IDs of its article_list.
-    Request all articles needed in one call.
+    Returns the content and url of the given articles of an OTOBO ticket.
+    Use the article IDs of the article_list of get_ticket_details.
     """
 
     raw = domain.get_ticket_details.do_get_ticket(
@@ -35,4 +32,4 @@ def get_articles(ticket_id: int, article_ids: list[int]) -> str:
     if not raw:
         raise ToolError(f"Ticket {ticket_id} not found")
 
-    return json.dumps(otobo.select_articles(raw, article_ids), sort_keys=True)
+    return otobo.select_articles(raw, article_ids)

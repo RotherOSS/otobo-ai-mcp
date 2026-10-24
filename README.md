@@ -61,7 +61,10 @@ Tickets may be arbitrarily long, while the context of the LLM is limited.
 Therefore `get_ticket_details` returns the articles in full only if the ticket fits `OTOBO_MCP_MAX_TOKENS`.
 Otherwise it returns an `article_list` without the content of the articles,
 followed by a hint to read the articles needed with `get_articles`.
-The hint is placed after the fence, as the LLM must not follow instructions within it.
+`get_articles` returns the requested articles as long as they fit `OTOBO_MCP_MAX_TOKENS`
+and names the ones left out in a hint,
+so the LLM need not sum up their sizes.
+The hints are placed after the fence, as the LLM must not follow instructions within it.
 
 As a last resort,
 a result of a read-only tool longer than `OTOBO_MCP_MAX_TOKENS` (default: 10000) is split into chunks.
@@ -74,7 +77,9 @@ Chunk 1 of 4. Repeat the call with chunk=2 and result_hash="1a2b3c4d".
 ```
 
 Pagination is stateless, each chunk is a new call fetching the data from OTOBO again.
-If the data changed in between, the `result_hash` no longer matches and the LLM is asked to start again with chunk 1.
+The `result_hash` covers the arguments and the result.
+If they changed in between, it no longer matches
+and the LLM is asked to repeat the call with the same arguments or to start again with chunk 1.
 
 > [!NOTE]
 > The token count is estimated from the length of the result using `OTOBO_MCP_CHARS_PER_TOKEN`, as the tokenizer of the LLM is unknown to the server.
