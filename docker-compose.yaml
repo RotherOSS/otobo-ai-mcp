@@ -12,7 +12,7 @@ services:
         - OTOBO_MCP_INTERNAL_URL=http://web:5000
         - OTOBO_MCP_PUBLIC_URL=https://localhost/otobo/index.pl
         - OTOBO_MCP_WEBSERVICE=OTOBO-AI
-        - OTOBO_MCP_SSL_VERIFY=false
+        - OTOBO_MCP_SSL_VERIFY=true
         - OTOBO_MCP_TIMEOUT=30
         - OTOBO_MCP_TRANSPORT=streamable-http
         - OTOBO_MCP_BIND=0.0.0.0

@@ -50,7 +50,7 @@ class Settings:
         self.internal_url  = os.environ.get("OTOBO_MCP_INTERNAL_URL", "http://web:5000/").rstrip("/")
         self.public_url    = os.environ.get("OTOBO_MCP_PUBLIC_URL", "https://localhost/otobo/index.pl")
         self.webservice    = os.environ.get("OTOBO_MCP_WEBSERVICE", "OTOBO-AI")
-        self.ssl_verify    = os.environ.get("OTOBO_MCP_SSL_VERIFY", "false").lower() in ("true", "1", "yes")
+        self.ssl_verify    = os.environ.get("OTOBO_MCP_SSL_VERIFY", "true").lower() in ("true", "1", "yes")
         self.timeout       = int(os.environ.get("OTOBO_MCP_TIMEOUT", 30))
         self.transport     = os.environ.get("OTOBO_MCP_TRANSPORT", "streamable-http")
         self.loglevel      = parse_loglevel(os.environ.get("OTOBO_MCP_LOGLEVEL", "20"))
