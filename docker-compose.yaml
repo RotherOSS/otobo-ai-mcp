@@ -21,13 +21,15 @@ services:
         # for loglevel description
         - OTOBO_MCP_LOGLEVEL=20
         # tools enabled for this server
-#        - OTOBO_MCP_ENABLED_TOOLS=faq_fulltext_search,get_link_to_faq,get_ticket_details,ticket_fulltext_search,unlink_ticket_to_ticket,find_similar_tickets,get_link_to_ticket,link_ticket_to_ticket,transfer_ticket_to_destination_queue,update_generated_response
+#        - OTOBO_MCP_ENABLED_TOOLS=faq_fulltext_search,get_link_to_faq,get_ticket_details,get_articles,ticket_fulltext_search,unlink_ticket_to_ticket,find_similar_tickets,get_link_to_ticket,link_ticket_to_ticket,transfer_ticket_to_destination_queue,update_generated_response
         # fence around each tool result, must contain {nonce}, prefix and suffix must differ
         - OTOBO_MCP_FENCE_PREFIX=<<<OTOBO_DATA_BEGIN {nonce}>>>
         - OTOBO_MCP_FENCE_SUFFIX=<<<OTOBO_DATA_END {nonce}>>>
-        # default token limit of a read-only tool result, longer results are chunked
-        - OTOBO_MCP_MAX_TOKENS=8000
+        # token limit of a read-only tool result, longer results are chunked
+        - OTOBO_MCP_MAX_TOKENS=10000
         - OTOBO_MCP_CHARS_PER_TOKEN=3
+        # states of linked tickets left out, like the OTOBO setting LinkObject::IgnoreLinkedTicketStateTypes
+        - OTOBO_MCP_IGNORED_LINKED_TICKET_STATES=merged,removed
         # run without MCP sessions, eg for several workers
         - OTOBO_MCP_STATELESS=false
         # user confirmation of write tools: required, advised or none
