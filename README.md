@@ -13,6 +13,7 @@ It exposes parts of the OTOBO webservices to an LLM as part of the [otobo-ai-ser
 |ticket_fulltext_search              | does a fulltext search in ES for tickets            |
 |faq_fulltext_search                 | does a fulltext search in ES for FAQs               |
 |get_ticket_details                  | retrieve ticket detail data including articles and links |
+|get_articles                        | retrieve selected articles of a ticket too long for get_ticket_details |
 |transfer_ticket_to_destination_queue| move ticket to another queue                        |
 |update_generated_response           | update the AI generated response for an article of a ticket in OTOBO |
 |find_similar_tickets                | find similar tickets in vector DB                   |
@@ -51,11 +52,24 @@ Configure the fence with `OTOBO_MCP_FENCE_PREFIX` and `OTOBO_MCP_FENCE_SUFFIX`.
 > [!IMPORTANT]
 > Both must contain the placeholder `{nonce}` and must differ from each other, otherwise the server refuses to start.
 
+## Linked Tickets
+
+Like the agent interface of OTOBO, `get_ticket_details` leaves out linked tickets in the states of `OTOBO_MCP_IGNORED_LINKED_TICKET_STATES` (default: `merged,removed`),
+eg the tickets merged into the ticket, whose articles were moved into it.
+Adjust it to the OTOBO setting `LinkObject::IgnoreLinkedTicketStateTypes`, which names state types, while the webservice returns state names.
+
 ## Chunked Output
 
 Tickets may be arbitrarily long, while the context of the LLM is limited.
-Every read-only tool accepts the parameter `max_tokens`, defaulting to `OTOBO_MCP_MAX_TOKENS`.
-A longer result is split into chunks.
+Therefore `get_ticket_details` returns the articles in full only if the ticket fits `OTOBO_MCP_MAX_TOKENS`.
+Otherwise it returns an `article_list` without the content of the articles,
+followed by a hint to read the articles needed with `get_articles`.
+The hint is placed after the fence, as the LLM must not follow instructions within it.
+
+As a last resort,
+a result of a read-only tool longer than `OTOBO_MCP_MAX_TOKENS` (default: 10000) is split into chunks.
+Set it to fit the context of the LLM in use.
+The LLM cannot choose the chunk size, as small chunks would only add calls.
 The first chunk is returned, followed by a hint how to retrieve the next one:
 
 ```

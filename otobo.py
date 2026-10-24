@@ -7,6 +7,7 @@ import logging
 import hashlib
 import inspect
 import json
+import re
 import secrets
 import functools
 
@@ -26,6 +27,7 @@ default_tools_enabled = ",".join([
     "faq_fulltext_search",
     "get_link_to_faq",
     "get_ticket_details",
+    "get_articles",
     "ticket_fulltext_search",
     "unlink_ticket_to_ticket",
     "find_similar_tickets",
@@ -57,8 +59,9 @@ class Settings:
         self.enabled_tools = os.environ.get("OTOBO_MCP_ENABLED_TOOLS",default_tools_enabled).split(",") 
         self.fence_prefix  = os.environ.get("OTOBO_MCP_FENCE_PREFIX", "<<<OTOBO_DATA_BEGIN {nonce}>>>")
         self.fence_suffix  = os.environ.get("OTOBO_MCP_FENCE_SUFFIX", "<<<OTOBO_DATA_END {nonce}>>>")
-        self.max_tokens    = int(os.environ.get("OTOBO_MCP_MAX_TOKENS", 8000))
+        self.max_tokens    = int(os.environ.get("OTOBO_MCP_MAX_TOKENS", 10000))
         self.chars_per_token = int(os.environ.get("OTOBO_MCP_CHARS_PER_TOKEN", 3))
+        self.ignored_linked_ticket_states = os.environ.get("OTOBO_MCP_IGNORED_LINKED_TICKET_STATES", "merged,removed").split(",")
         self.stateless     = os.environ.get("OTOBO_MCP_STATELESS", "false").lower() in ("true", "1", "yes")
         self.elicitation   = os.environ.get("OTOBO_MCP_ELICITATION", "required").lower()
         self.elicitation_timeout = int(os.environ.get("OTOBO_MCP_ELICITATION_TIMEOUT", 300))
@@ -195,22 +198,26 @@ else:
 
 
 
-# Output of read-only tools longer than max_tokens is split into chunks.
+# Output of read-only tools longer than OTOBO_MCP_MAX_TOKENS is split into chunks.
+# Chunking is the last resort, the tools should rather return results fitting the context of the LLM.
 # Pagination is stateless, so it works without MCP sessions and across workers:
 # to get a further chunk, the same tool is called again with the chunk number,
 # which re-fetches the data from OTOBO, checking the credentials again.
 # The result_hash detects data changed in between, which would shift the chunk boundaries.
 # The token count is estimated from the length, as the tokenizer of the LLM is unknown.
 
-MaxTokens  = Annotated[int, Field(ge=500, description="approximate maximum number of tokens returned, longer results are split into chunks")]
 Chunk      = Annotated[int, Field(ge=1, description="number of the chunk to return, starting at 1")]
 ResultHash = Annotated[str | None, Field(description="result_hash given with the previous chunk")]
 
 
-def paginate(output: str, max_tokens: int, chunk: int, result_hash: str | None) -> str:
+def fits_max_tokens(output: str) -> bool:
+    return len(output) <= settings.max_tokens * settings.chars_per_token
 
-    chunk_size = max_tokens * settings.chars_per_token
-    if chunk == 1 and len(output) <= chunk_size:
+
+def paginate(output: str, chunk: int, result_hash: str | None) -> str:
+
+    chunk_size = settings.max_tokens * settings.chars_per_token
+    if chunk == 1 and fits_max_tokens(output):
         return fence(output)
 
     chunks = [ output[start:start + chunk_size] for start in range(0, len(output), chunk_size) ]
@@ -285,20 +292,25 @@ def run(fn, *fn_args, **fn_kwargs) -> str:
         raise ToolError(fence(str(e))) from e
 
 
-# Read-only tools get the parameters max_tokens, chunk and result_hash for pagination.
+# Read-only tools get the parameters chunk and result_hash for pagination.
+# A tool may return a tuple of output and hint, the hint being appended unfenced,
+# as the LLM must not follow instructions within the fenced output.
 
 def paginated(fn):
 
     @functools.wraps(fn)
-    def wrapper(*fn_args, max_tokens: int = settings.max_tokens, chunk: int = 1, result_hash: str | None = None, **fn_kwargs):
-        response = paginate(run(fn, *fn_args, **fn_kwargs), max_tokens, chunk, result_hash)
-        log.debug("tool %s output, chunk %s of max %s tokens: %s", fn.__name__, chunk, max_tokens, response)
+    def wrapper(*fn_args, chunk: int = 1, result_hash: str | None = None, **fn_kwargs):
+        result = run(fn, *fn_args, **fn_kwargs)
+        output, hint = result if isinstance(result, tuple) else (result, None)
+        response = paginate(output, chunk, result_hash)
+        if hint:
+            response += "\n" + hint
+        log.debug("tool %s output, chunk %s: %s", fn.__name__, chunk, response)
         return response
 
     signature = inspect.signature(fn)
-    wrapper.__signature__ = signature.replace(parameters=[
+    wrapper.__signature__ = signature.replace(return_annotation=str, parameters=[
         *signature.parameters.values(),
-        keyword_parameter("max_tokens", MaxTokens, settings.max_tokens),
         keyword_parameter("chunk", Chunk, 1),
         keyword_parameter("result_hash", ResultHash, None),
     ])
@@ -366,11 +378,48 @@ def fetch_articles(ticket: dict) -> list[dict]:
     return articles
 
 
-def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
+# A ticket longer than OTOBO_MCP_MAX_TOKENS lists its articles without their content,
+# which get_articles returns, so the ticket does not exceed the context of the LLM.
+
+# The list is a table of columns and rows, saving the repetition of the field names per article.
+
+article_list_columns = ("article_id", "created", "from", "subject", "sender_type", "body_tokens")
+article_list_subject_length = 60
+
+# reply and forward prefixes like Re:, AW:, Fwd: and ticket numbers like [Ticket#2025032810000332]
+subject_prefixes = re.compile(r"^(\s*((re|aw|fwd?|wg|tr|sv|vs)\s*:|\[[^\]]*#\d+\]))+\s*", re.IGNORECASE)
+
+def article_list(articles: list[dict]) -> dict:
+
+    def row(article: dict) -> list:
+        return [
+            article.get("article_id"),
+            article.get("created"),
+            article.get("from"),
+            subject_prefixes.sub("", article.get("subject") or "")[:article_list_subject_length],
+            article.get("sender_type"),
+            len(article.get("body") or "") // settings.chars_per_token,
+        ]
+
+    return { "columns": article_list_columns, "rows": [ row(article) for article in articles ] }
+
+
+# OTOBO returns the article IDs as strings, so they are compared as strings.
+
+def select_articles(ticket: dict, article_ids: list[int]) -> list[dict]:
+
+    articles = { str(article.get("article_id")): article for article in fetch_articles(ticket) }
+
+    unknown_ids = [ article_id for article_id in article_ids if str(article_id) not in articles ]
+    if unknown_ids:
+        raise ToolError(f"Ticket {ticket['ticket_id']} has no articles {unknown_ids}, use get_ticket_details to list its articles")
+
+    return [ articles[str(article_id)] for article_id in dict.fromkeys(article_ids) ]
+
+
+def filter_ticket(ticket: dict, include_articles: bool = True) -> tuple[str, str | None]:
 
     out = ticket
-
-    out["article"] = fetch_articles(ticket)
 
     out["url"] = settings.ticket_url(ticket["ticket_id"]) if ticket.get("ticket_id") else None
 
@@ -378,6 +427,8 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
         linked = ticket["linked"]
         if isinstance(linked, dict):
             linked = [ linked ]
+        # like the OTOBO setting LinkObject::IgnoreLinkedTicketStateTypes, eg the empty tickets merged into this one
+        linked = [ link for link in linked if link.get("ticket", {}).get("state") not in settings.ignored_linked_ticket_states ]
         for link in linked:
             if link.get("ticket") is not None:
                 id = link["ticket"]["ticket_id"]
@@ -385,7 +436,24 @@ def filter_ticket(ticket: dict, include_articles: bool = True) -> dict:
         # OTOBO returns the links in random order, which would break the result_hash of chunked output
         out["linked"] = sorted(linked, key=lambda link: json.dumps(link, sort_keys=True))
 
-    return out
+    if not include_articles:
+        out.pop("article", None)
+        return json.dumps(out, sort_keys=True), None
+
+    articles = fetch_articles(ticket)
+    out["article"] = articles
+    output = json.dumps(out, sort_keys=True)
+    if fits_max_tokens(output):
+        return output, None
+
+    del out["article"]
+    out["article_list"] = article_list(articles)
+    hint = (
+        "The ticket is too long to return its articles in full, article_list lists them without their content. "
+        f"Read the articles needed with get_articles(ticket_id={ticket['ticket_id']}, article_ids=[...]), several in one call."
+    )
+
+    return json.dumps(out, sort_keys=True), hint
 
 
 # main entry point
