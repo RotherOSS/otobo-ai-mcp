@@ -2,16 +2,11 @@
 import rest
 
 
-def do_link_ticket( type: str, ticket_id: str, linked_ticket_id: str, linked_faq_id: str, dir : str, sid : str = None, bearer : str = None ) -> dict:
-
-    payload = {}
-
-    target = "Ticket" if linked_ticket_id is not None else "FAQ"
-    target_id = linked_ticket_id if linked_ticket_id is not None else linked_faq_id
+def do_link_ticket( ticket_id: int, linked_ticket_id: int, link_type: str, sid: str = None, bearer: str = None ) -> dict:
 
     data = rest.put_operation(
-        "Ticket/" + str(ticket_id) + "/Link/" + target + "/" + str(dir) + "/" + str(target_id),
-        payload,
+        "Ticket/" + str(ticket_id) + "/Link/Ticket/" + link_type + "/" + str(linked_ticket_id),
+        {},
         sid    = sid,
         bearer = bearer,
     )

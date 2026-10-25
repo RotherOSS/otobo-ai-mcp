@@ -13,16 +13,14 @@ It exposes parts of the OTOBO webservices to an LLM as part of the [otobo-ai-ser
 |ticket_fulltext_search              | does a fulltext search in ES for tickets            |
 |faq_fulltext_search                 | does a fulltext search in ES for FAQs               |
 |get_ticket_details                  | retrieve ticket detail data including articles and links |
-|transfer_ticket_to_destination_queue| move ticket to another queue                        |
+|get_articles                        | retrieve selected articles of a ticket too long for get_ticket_details |
+|move_ticket_to_queue                | move ticket to another queue                        |
 |update_generated_response           | update the AI generated response for an article of a ticket in OTOBO |
 |find_similar_tickets                | find similar tickets in vector DB                   |
 |link_ticket_to_ticket               | link a ticket to another ticket in OTOBO            |
 |unlink_ticket_from_ticket           | remove a link from a ticket to another ticket       |
-|get_link_to_ticket                  | retrieve URL that links to a ticket in OTOBO        |
-|get_link_to_faq                     | retrieve URL that links to a FAQ item in OTOBO      |
 
-All tools - except for the last two link generation tools - need a valid
-OTOBO SessionID (sid).
+All tools need a valid OTOBO SessionID (sid).
 When the chat is invoked from OTOBO,
 this sid will be passed.
 
@@ -51,11 +49,27 @@ Configure the fence with `OTOBO_MCP_FENCE_PREFIX` and `OTOBO_MCP_FENCE_SUFFIX`.
 > [!IMPORTANT]
 > Both must contain the placeholder `{nonce}` and must differ from each other, otherwise the server refuses to start.
 
+## Linked Tickets
+
+Like the agent interface of OTOBO, `get_ticket_details` leaves out linked tickets in the states of `OTOBO_MCP_IGNORED_LINKED_TICKET_STATES` (default: `merged,removed`),
+eg the tickets merged into the ticket, whose articles were moved into it.
+Adjust it to the OTOBO setting `LinkObject::IgnoreLinkedTicketStateTypes`, which names state types, while the webservice returns state names.
+
 ## Chunked Output
 
 Tickets may be arbitrarily long, while the context of the LLM is limited.
-Every read-only tool accepts the parameter `max_tokens`, defaulting to `OTOBO_MCP_MAX_TOKENS`.
-A longer result is split into chunks.
+Therefore `get_ticket_details` returns the articles in full only if the ticket fits `OTOBO_MCP_MAX_TOKENS`.
+Otherwise it returns an `article_list` without the content of the articles,
+followed by a hint to read the articles needed with `get_articles`.
+`get_articles` returns the requested articles as long as they fit `OTOBO_MCP_MAX_TOKENS`
+and names the ones left out in a hint,
+so the LLM need not sum up their sizes.
+The hints are placed after the fence, as the LLM must not follow instructions within it.
+
+As a last resort,
+a result of a read-only tool longer than `OTOBO_MCP_MAX_TOKENS` (default: 10000) is split into chunks.
+Set it to fit the context of the LLM in use.
+The LLM cannot choose the chunk size, as small chunks would only add calls.
 The first chunk is returned, followed by a hint how to retrieve the next one:
 
 ```
@@ -63,7 +77,9 @@ Chunk 1 of 4. Repeat the call with chunk=2 and result_hash="1a2b3c4d".
 ```
 
 Pagination is stateless, each chunk is a new call fetching the data from OTOBO again.
-If the data changed in between, the `result_hash` no longer matches and the LLM is asked to start again with chunk 1.
+The `result_hash` covers the arguments and the result.
+If they changed in between, it no longer matches
+and the LLM is asked to repeat the call with the same arguments or to start again with chunk 1.
 
 > [!NOTE]
 > The token count is estimated from the length of the result using `OTOBO_MCP_CHARS_PER_TOKEN`, as the tokenizer of the LLM is unknown to the server.

@@ -53,13 +53,6 @@ async def run(SessionID):
             print(f"Structured tool result: {result_structured}")
 
             # Call a tool (add tool from fastmcp_quickstart)
-#            result = await session.call_tool("get_link_to_ticket", arguments={"ticket_id": 1} )
-#            result_unstructured = result.content[0]
-#            if isinstance(result_unstructured, types.TextContent):
-#                print(f"Tool result: {result_unstructured.text}")
-#            result_structured = result.structuredContent
-#            print(f"Structured tool result: {result_structured}")
-
             # Call a tool (add tool from fastmcp_quickstart)
 #            result = await session.call_tool("update_generated_response", arguments={"ticket_id": 1, "generated_response" : "Holla die Waldfee!", "otobo_sid" : SessionID } ) #, "article_id" : 20 } )
 #            result_unstructured = result.content[0]
@@ -69,7 +62,7 @@ async def run(SessionID):
 #            print(f"Structured tool result: {result_structured}")
 
             # Call a tool (add tool from fastmcp_quickstart)
-#            result = await session.call_tool("transfer_ticket_to_destination_queue", arguments={"ticket_id": 1, "destination_queue" : "Test", "otobo_sid" : SessionID } )
+#            result = await session.call_tool("move_ticket_to_queue", arguments={"ticket_id": 1, "destination_queue" : "Test", "otobo_sid" : SessionID } )
 #            result_unstructured = result.content[0]
 #            if isinstance(result_unstructured, types.TextContent):
 #                print(f"Tool result: {result_unstructured.text}")
@@ -85,14 +78,14 @@ async def run(SessionID):
 #            print(f"Structured tool result: {result_structured}")
 
             # Call a tool (add tool from fastmcp_quickstart)
-            result = await session.call_tool("link_ticket_to_ticket", arguments={"ticket_id": "1", "linked_ticket_id" : "2", "otobo_sid" : SessionID } )
+            result = await session.call_tool("link_ticket_to_ticket", arguments={"ticket_id": 1, "linked_ticket_id" : 2, "otobo_sid" : SessionID } )
             result_unstructured = result.content[0]
             if isinstance(result_unstructured, types.TextContent):
                 print(f"Tool result: {result_unstructured.text}")
             result_structured = result.structuredContent
             print(f"Structured tool result: {result_structured}")
 
-            result = await session.call_tool("unlink_ticket_from_ticket", arguments={"ticket_id": "1", "linked_ticket_id" : "2", "otobo_sid" : SessionID } )
+            result = await session.call_tool("unlink_ticket_from_ticket", arguments={"ticket_id": 1, "linked_ticket_id" : 2, "otobo_sid" : SessionID } )
             result_unstructured = result.content[0]
             if isinstance(result_unstructured, types.TextContent):
                 print(f"Tool result: {result_unstructured.text}")
