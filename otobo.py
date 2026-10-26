@@ -54,7 +54,7 @@ class Settings:
         self.timeout       = int(os.environ.get("OTOBO_MCP_TIMEOUT", 30))
         self.transport     = os.environ.get("OTOBO_MCP_TRANSPORT", "streamable-http")
         self.loglevel      = parse_loglevel(os.environ.get("OTOBO_MCP_LOGLEVEL", "20"))
-        self.enabled_tools = os.environ.get("OTOBO_MCP_ENABLED_TOOLS",default_tools_enabled).split(",") 
+        self.enabled_tools = os.environ.get("OTOBO_MCP_ENABLED_TOOLS",default_tools_enabled).split(",")
         self.fence_prefix  = os.environ.get("OTOBO_MCP_FENCE_PREFIX", "<<<OTOBO_DATA_BEGIN {nonce}>>>")
         self.fence_suffix  = os.environ.get("OTOBO_MCP_FENCE_SUFFIX", "<<<OTOBO_DATA_END {nonce}>>>")
         self.max_tokens    = int(os.environ.get("OTOBO_MCP_MAX_TOKENS", 10000))
@@ -111,7 +111,16 @@ def fence(output: str) -> str:
     return f"{prefix}\n{output}\n{suffix}"
 
 
-instructions = "Tools to read and edit tickets and FAQs of the OTOBO ticket system.\n"
+instructions = """Tools for OTOBO, a service management system, in which agents handle requests of customers.
+Its data:
+- Ticket: a request, with queue (team or topic), state, priority, owner and responsible agent, customer, customer user and dynamic fields.
+  Tools take the ticket ID, not the longer ticket number shown to users.
+- Article: a message of a ticket, from the customer user, an agent or the system, visible to the customer or internal.
+- Customer: an organisational unit, eg a company or a department of one, identified by its customer ID.
+- Customer user: a person of a customer, requesting tickets.
+- FAQ item: a knowledge base article, linkable to tickets.
+- Tickets link to each other as equals or as parent and child.
+"""
 
 if not settings.use_oauth2:
     instructions += "Each tool needs the OTOBO SessionID (otobo_sid) of the user, as given by the chat.\n"
@@ -161,7 +170,7 @@ class PassthroughTokenVerifier(TokenVerifier):
         )
 
 
-# server instance 
+# server instance
 server = None
 
 if settings.use_oauth2:
